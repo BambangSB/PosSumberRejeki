@@ -7,10 +7,15 @@ import com.sumberrejeki.pos.domain.model.Order
 import com.sumberrejeki.pos.domain.model.UserRole
 import com.sumberrejeki.pos.domain.usecase.auth.GetCurrentSessionUseCase
 import com.sumberrejeki.pos.domain.usecase.report.GetFinancialReportUseCase
+import android.content.Context
+import android.content.Intent
 import com.sumberrejeki.pos.domain.usecase.report.GetOrdersHistoryUseCase
 import com.sumberrejeki.pos.utils.printer.BluetoothPrinterDevice
 import com.sumberrejeki.pos.utils.printer.BluetoothPrinterManager
 import com.sumberrejeki.pos.utils.printer.ReceiptFormatter
+import com.sumberrejeki.pos.utils.report.FinancialExportResult
+import com.sumberrejeki.pos.utils.report.FinancialReportExporter
+import java.io.File
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -32,7 +37,9 @@ data class HistoryUiState(
     val reportErrorMessage: String? = null,
     val pairedPrinters: List<BluetoothPrinterDevice> = emptyList(),
     val isPrinting: Boolean = false,
-    val printMessage: String? = null
+    val printMessage: String? = null,
+    val isExportingSpreadsheet: Boolean = false,
+    val exportResult: FinancialExportResult? = null
 )
 
 class HistoryViewModel(
@@ -114,5 +121,38 @@ class HistoryViewModel(
 
     fun clearPrintMessage() {
         _uiState.value = _uiState.value.copy(printMessage = null)
+    }
+
+    fun exportFinancialReport(context: Context, storeName: String = "Sumber Rejeki POS") {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isExportingSpreadsheet = true)
+            try {
+                val orders = allOrders.value
+                val result = FinancialReportExporter.exportToSpreadsheet(
+                    context = context,
+                    summary = _uiState.value.financialSummary,
+                    orders = orders,
+                    period = _uiState.value.selectedPeriod,
+                    storeName = storeName
+                )
+                _uiState.value = _uiState.value.copy(
+                    isExportingSpreadsheet = false,
+                    exportResult = result
+                )
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isExportingSpreadsheet = false,
+                    reportErrorMessage = "Gagal mengekspor laporan: ${e.message}"
+                )
+            }
+        }
+    }
+
+    fun dismissExportResult() {
+        _uiState.value = _uiState.value.copy(exportResult = null)
+    }
+
+    fun createShareIntent(context: Context, file: File): Intent {
+        return FinancialReportExporter.createShareIntent(context, file)
     }
 }

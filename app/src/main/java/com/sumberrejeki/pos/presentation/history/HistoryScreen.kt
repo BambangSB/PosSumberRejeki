@@ -251,7 +251,7 @@ fun HistoryScreen(
                 shape = RoundedCornerShape(16.dp),
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(end = 16.dp, bottom = 80.dp)
+                    .padding(end = 16.dp, bottom = 16.dp)
             )
         }
 
@@ -259,7 +259,7 @@ fun HistoryScreen(
             hostState = snackbarHostState,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 80.dp)
+                .padding(bottom = 16.dp)
         )
     }
 

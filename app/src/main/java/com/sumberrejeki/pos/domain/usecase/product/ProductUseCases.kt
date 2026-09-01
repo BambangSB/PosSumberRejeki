@@ -77,4 +77,14 @@ class DeleteProductUseCase(
         productRepository.deleteProduct(productId)
         return Result.success(Unit)
     }
+
+    suspend fun deleteMultiple(productIds: List<Long>, userRole: UserRole): Result<Unit> {
+        if (userRole != UserRole.ADMIN) {
+            return Result.failure(SecurityException("Hanya Admin yang berwenang menghapus produk"))
+        }
+        if (productIds.isEmpty()) return Result.success(Unit)
+
+        productRepository.deleteProducts(productIds)
+        return Result.success(Unit)
+    }
 }

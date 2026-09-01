@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -31,6 +32,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Close
@@ -47,7 +49,11 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -61,6 +67,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -104,6 +111,29 @@ fun AddEditProductScreen(
     var sellPriceStr by remember { mutableStateOf("") }
     var costPriceStr by remember { mutableStateOf("") }
     var stockStr by remember { mutableStateOf("10") }
+
+    val dbCategories by viewModel.categories.collectAsState()
+    val defaultCategories = remember {
+        listOf(
+            "Sembako",
+            "Minuman",
+            "Makanan Instan",
+            "Perawatan Tubuh",
+            "Snack & Camilan",
+            "Bumbu Dapur",
+            "Perlengkapan Rumah",
+            "Obat & Kesehatan",
+            "Rokok & Tembakau",
+            "Alat Tulis & Kantor",
+            "Lainnya"
+        )
+    }
+    val allCategories = remember(dbCategories) {
+        (defaultCategories + dbCategories).filter { it.isNotBlank() }.distinct()
+    }
+    var isCategoryDropdownExpanded by remember { mutableStateOf(false) }
+    var showAddCategoryDialog by remember { mutableStateOf(false) }
+    var newCategoryInput by remember { mutableStateOf("") }
 
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(false) }
@@ -175,6 +205,7 @@ fun AddEditProductScreen(
                     .fillMaxSize()
                     .padding(padding)
                     .background(MaterialTheme.colorScheme.background)
+                    .imePadding()
                     .verticalScroll(rememberScrollState())
                     .padding(20.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -234,19 +265,71 @@ fun AddEditProductScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                // Category
-                OutlinedTextField(
-                    value = category,
-                    onValueChange = {
-                        category = it
-                        errorMessage = null
-                    },
-                    label = { Text("Kategori (misal: Sembako, Minuman, Snack)") },
-                    leadingIcon = { Icon(Icons.Default.Category, contentDescription = null) },
-                    singleLine = true,
-                    shape = RoundedCornerShape(12.dp),
+                // Category Dropdown
+                ExposedDropdownMenuBox(
+                    expanded = isCategoryDropdownExpanded,
+                    onExpandedChange = { isCategoryDropdownExpanded = it },
                     modifier = Modifier.fillMaxWidth()
-                )
+                ) {
+                    OutlinedTextField(
+                        value = category,
+                        onValueChange = {
+                            category = it
+                            errorMessage = null
+                        },
+                        label = { Text("Kategori Produk") },
+                        leadingIcon = { Icon(Icons.Default.Category, contentDescription = null) },
+                        trailingIcon = {
+                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = isCategoryDropdownExpanded)
+                        },
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor()
+                    )
+
+                    ExposedDropdownMenu(
+                        expanded = isCategoryDropdownExpanded,
+                        onDismissRequest = { isCategoryDropdownExpanded = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.Default.Add,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = "+ Tambah Kategori Baru...",
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            },
+                            onClick = {
+                                isCategoryDropdownExpanded = false
+                                newCategoryInput = ""
+                                showAddCategoryDialog = true
+                            }
+                        )
+
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+
+                        allCategories.forEach { catOption ->
+                            DropdownMenuItem(
+                                text = { Text(catOption) },
+                                onClick = {
+                                    category = catOption
+                                    isCategoryDropdownExpanded = false
+                                    errorMessage = null
+                                }
+                            )
+                        }
+                    }
+                }
 
                 // Selling Price & Cost Price
                 Row(
@@ -358,6 +441,8 @@ fun AddEditProductScreen(
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                     )
                 }
+
+                Spacer(modifier = Modifier.height(40.dp))
             }
         }
     }
@@ -396,6 +481,46 @@ fun AddEditProductScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteConfirmDialog = false }) {
+                    Text("Batal")
+                }
+            }
+        )
+    }
+
+    // Modal Tambah Kategori Baru
+    if (showAddCategoryDialog) {
+        AlertDialog(
+            onDismissRequest = { showAddCategoryDialog = false },
+            title = { Text("Tambah Kategori Baru", fontWeight = FontWeight.Bold) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Masukkan nama kategori produk yang ingin ditambahkan:")
+                    OutlinedTextField(
+                        value = newCategoryInput,
+                        onValueChange = { newCategoryInput = it },
+                        placeholder = { Text("misal: Frozen Food, Bumbu Dapur") },
+                        singleLine = true,
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val trimmed = newCategoryInput.trim()
+                        if (trimmed.isNotBlank()) {
+                            category = trimmed
+                            errorMessage = null
+                            showAddCategoryDialog = false
+                        }
+                    }
+                ) {
+                    Text("Gunakan Kategori")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAddCategoryDialog = false }) {
                     Text("Batal")
                 }
             }

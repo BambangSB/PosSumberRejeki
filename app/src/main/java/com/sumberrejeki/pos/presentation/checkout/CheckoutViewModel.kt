@@ -75,8 +75,9 @@ class CheckoutViewModel(
     }
 
     fun onAmountPaidChanged(amountStr: String) {
+        val cleanDigits = amountStr.filter { it.isDigit() }
         _uiState.value = _uiState.value.copy(
-            amountPaidInput = amountStr,
+            amountPaidInput = cleanDigits,
             errorMessage = null
         )
         recalculateChange()

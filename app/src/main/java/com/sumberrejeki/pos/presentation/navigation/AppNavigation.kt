@@ -3,7 +3,9 @@ package com.sumberrejeki.pos.presentation.navigation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -29,6 +31,7 @@ import com.sumberrejeki.pos.presentation.history.HistoryViewModel
 import com.sumberrejeki.pos.presentation.home.HomeScreen
 import com.sumberrejeki.pos.presentation.home.HomeViewModel
 import com.sumberrejeki.pos.presentation.product.AddEditProductScreen
+import com.sumberrejeki.pos.presentation.product.ManageProductsScreen
 import com.sumberrejeki.pos.presentation.product.ProductCatalogScreen
 import com.sumberrejeki.pos.presentation.product.ProductViewModel
 import com.sumberrejeki.pos.presentation.profile.ProfileScreen
@@ -59,7 +62,8 @@ fun AppNavigation(
             getCurrentSessionUseCase = container.getCurrentSessionUseCase,
             getDashboardMetricsUseCase = container.getDashboardMetricsUseCase,
             getCartDraftsUseCase = container.getCartDraftsUseCase,
-            getOrdersHistoryUseCase = container.getOrdersHistoryUseCase
+            getOrdersHistoryUseCase = container.getOrdersHistoryUseCase,
+            getProductsUseCase = container.getProductsUseCase
         )
     }
 
@@ -114,6 +118,10 @@ fun AppNavigation(
             deleteStaffUserUseCase = container.deleteStaffUserUseCase,
             verifyRsaLicenseUseCase = container.verifyRsaLicenseUseCase,
             getLicenseStatusUseCase = container.getLicenseStatusUseCase,
+            getProductsUseCase = container.getProductsUseCase,
+            deleteProductUseCase = container.deleteProductUseCase,
+            authRepository = container.authRepository,
+            licenseRepository = container.licenseRepository,
             backupManager = container.backupManager,
             getCurrentSessionUseCase = container.getCurrentSessionUseCase
         )
@@ -122,6 +130,9 @@ fun AppNavigation(
     val currentSession by authViewModel.currentSession.collectAsState()
     val totalCartItems by productViewModel.totalCartItems.collectAsState()
     val totalCartPrice by productViewModel.totalCartPrice.collectAsState()
+    val homeUiState by homeViewModel.uiState.collectAsState()
+
+    var showNotificationSheet by remember { mutableStateOf(false) }
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -164,7 +175,10 @@ fun AppNavigation(
                     userName = currentSession?.username,
                     cartItemCount = totalCartItems,
                     onCartClick = { navController.navigate(Screen.Checkout.route) },
-                    showCartAction = currentRoute != Screen.Profile.route
+                    showCartAction = currentRoute != Screen.Profile.route,
+                    notificationCount = homeUiState.notifications.size,
+                    showNotificationAction = currentRoute == Screen.Home.route,
+                    onNotificationClick = { showNotificationSheet = true }
                 )
             }
         },
@@ -220,7 +234,9 @@ fun AppNavigation(
                     onNavigateToCatalog = { navController.navigate(Screen.Catalog.route) },
                     onNavigateToScanner = { navController.navigate(Screen.BarcodeScanner.route) },
                     onNavigateToHistory = { navController.navigate(Screen.History.route) },
-                    onNavigateToReport = { navController.navigate(Screen.FinancialReport.route) }
+                    onNavigateToReport = { navController.navigate(Screen.FinancialReport.route) },
+                    showNotificationSheet = showNotificationSheet,
+                    onDismissNotificationSheet = { showNotificationSheet = false }
                 )
             }
 
@@ -316,6 +332,20 @@ fun AppNavigation(
                 )
             }
 
+            composable(Screen.ManageProducts.route) {
+                ManageProductsScreen(
+                    viewModel = productViewModel,
+                    userRole = currentSession?.role,
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToAddProduct = {
+                        navController.navigate(Screen.AddEditProduct.createRoute())
+                    },
+                    onNavigateToEditProduct = { productId ->
+                        navController.navigate(Screen.AddEditProduct.createRoute(productId = productId))
+                    }
+                )
+            }
+
             composable(Screen.Profile.route) {
                 ProfileScreen(
                     viewModel = profileViewModel,
@@ -324,6 +354,9 @@ fun AppNavigation(
                         navController.navigate(Screen.Welcome.route) {
                             popUpTo(0) { inclusive = true }
                         }
+                    },
+                    onNavigateToManageProducts = {
+                        navController.navigate(Screen.ManageProducts.route)
                     }
                 )
             }

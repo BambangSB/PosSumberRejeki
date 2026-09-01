@@ -104,6 +104,13 @@ class ProductViewModel(
         }
     }
 
+    fun deleteMultipleProducts(productIds: List<Long>, userRole: UserRole, onComplete: (Result<Unit>) -> Unit) {
+        viewModelScope.launch {
+            val result = deleteProductUseCase.deleteMultiple(productIds, userRole)
+            onComplete(result)
+        }
+    }
+
     suspend fun getProductById(productId: Long): Product? {
         return getProductsUseCase.getProductById(productId)
     }

@@ -1,5 +1,10 @@
 package com.sumberrejeki.pos.presentation.history
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.content.Intent
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -20,11 +26,17 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.CreditCard
+import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.Leaderboard
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.PieChart
 import androidx.compose.material.icons.filled.Receipt
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.TableChart
 import androidx.compose.material.icons.filled.TrendingUp
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -35,9 +47,11 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -48,6 +62,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -63,6 +78,7 @@ fun FinancialReportScreen(
     userRole: UserRole?,
     onNavigateBack: () -> Unit
 ) {
+    val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
     val summary = uiState.financialSummary
 
@@ -76,6 +92,25 @@ fun FinancialReportScreen(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Kembali"
                         )
+                    }
+                },
+                actions = {
+                    if (userRole == UserRole.ADMIN && !uiState.isLoadingReport) {
+                        IconButton(
+                            onClick = { viewModel.exportFinancialReport(context) }
+                        ) {
+                            if (uiState.isExportingSpreadsheet) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(20.dp),
+                                    strokeWidth = 2.dp
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Default.FileDownload,
+                                    contentDescription = "Export Spreadsheet (Excel/CSV)"
+                                )
+                            }
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -141,6 +176,38 @@ fun FinancialReportScreen(
                                 selectedContainerColor = MaterialTheme.colorScheme.primary,
                                 selectedLabelColor = MaterialTheme.colorScheme.onPrimary
                             )
+                        )
+                    }
+                }
+
+                // Quick Export Spreadsheet Button
+                OutlinedButton(
+                    onClick = { viewModel.exportFinancialReport(context) },
+                    enabled = !uiState.isExportingSpreadsheet,
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = MaterialTheme.colorScheme.primary
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    if (uiState.isExportingSpreadsheet) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(18.dp),
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Mengekspor Spreadsheet...")
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.TableChart,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Export Laporan ke Spreadsheet (Excel / CSV)",
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
                 }
@@ -379,6 +446,81 @@ fun FinancialReportScreen(
                 Spacer(modifier = Modifier.height(20.dp))
             }
         }
+    }
+
+    // Modal Hasil Export Spreadsheet
+    val exportRes = uiState.exportResult
+    if (exportRes != null) {
+        AlertDialog(
+            onDismissRequest = { viewModel.dismissExportResult() },
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.TableChart,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(36.dp)
+                )
+            },
+            title = {
+                Text("Laporan Berhasil Diexport!", fontWeight = FontWeight.Bold)
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(
+                        text = "File spreadsheet laporan laba & keuangan (${exportRes.periodName}) siap dibuka di Excel / Google Sheets.",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+
+                    Surface(
+                        shape = RoundedCornerShape(10.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Text(
+                                text = "File: ${exportRes.fileName}",
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Lokasi: ${exportRes.filePath}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+
+                    Text(
+                        text = "Total Omzet: ${CurrencyFormatter.formatRupiah(exportRes.totalRevenue)} | Laba: ${CurrencyFormatter.formatRupiah(exportRes.grossProfit)}",
+                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold)
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val shareIntent = viewModel.createShareIntent(context, exportRes.file)
+                        context.startActivity(Intent.createChooser(shareIntent, "Buka / Bagikan Spreadsheet Laporan"))
+                    }
+                ) {
+                    Icon(imageVector = Icons.Default.Share, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Buka / Bagikan")
+                }
+            },
+            dismissButton = {
+                OutlinedButton(
+                    onClick = {
+                        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                        clipboard.setPrimaryClip(ClipData.newPlainText("Export Path", exportRes.filePath))
+                        Toast.makeText(context, "Lokasi file disalin ke clipboard!", Toast.LENGTH_SHORT).show()
+                    }
+                ) {
+                    Text("Salin Lokasi")
+                }
+            }
+        )
     }
 }
 

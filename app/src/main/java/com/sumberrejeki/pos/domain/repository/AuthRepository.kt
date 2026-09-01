@@ -14,5 +14,6 @@ interface AuthRepository {
     suspend fun registerUser(user: User): Long
     suspend fun deleteUser(userId: Long)
     suspend fun saveSession(user: User)
+    suspend fun updateUsername(userId: Long, newUsername: String): Result<Unit>
     suspend fun logout()
 }

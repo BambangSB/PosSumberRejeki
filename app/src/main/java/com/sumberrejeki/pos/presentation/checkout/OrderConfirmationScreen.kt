@@ -20,7 +20,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.CleaningServices
+import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.ShoppingCartCheckout
 import androidx.compose.material3.AlertDialog
@@ -74,6 +75,15 @@ fun OrderConfirmationScreen(
 
     var showClearCartConfirm by remember { mutableStateOf(false) }
 
+    val formattedAmountPaid = remember(uiState.amountPaidInput) {
+        if (uiState.amountPaidInput.isBlank()) ""
+        else {
+            val num = uiState.amountPaidInput.toLongOrNull()
+            if (num != null) CurrencyFormatter.formatNumber(num.toDouble())
+            else uiState.amountPaidInput
+        }
+    }
+
     val quickAmounts = remember(totalPrice) {
         val list = mutableListOf<Double>()
         if (totalPrice > 0) {
@@ -104,8 +114,8 @@ fun OrderConfirmationScreen(
                     if (cartItems.isNotEmpty()) {
                         IconButton(onClick = { showClearCartConfirm = true }) {
                             Icon(
-                                imageVector = Icons.Default.Delete,
-                                contentDescription = "Kosongkan Keranjang",
+                                imageVector = Icons.Default.CleaningServices,
+                                contentDescription = "Bersihkan Keranjang",
                                 tint = MaterialTheme.colorScheme.error
                             )
                         }
@@ -296,13 +306,21 @@ fun OrderConfirmationScreen(
                                 Spacer(modifier = Modifier.height(12.dp))
 
                                 OutlinedTextField(
-                                    value = uiState.amountPaidInput,
-                                    onValueChange = {
-                                        if (it.all { c -> c.isDigit() }) {
-                                            viewModel.onAmountPaidChanged(it)
-                                        }
+                                    value = formattedAmountPaid,
+                                    onValueChange = { inputStr ->
+                                        val cleanDigits = inputStr.filter { it.isDigit() }
+                                        viewModel.onAmountPaidChanged(cleanDigits)
                                     },
                                     label = { Text("Jumlah Uang Diterima (Rp)") },
+                                    placeholder = { Text("0") },
+                                    leadingIcon = {
+                                        Text(
+                                            text = "Rp",
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.padding(start = 14.dp, end = 4.dp)
+                                        )
+                                    },
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                     singleLine = true,
                                     shape = RoundedCornerShape(12.dp),

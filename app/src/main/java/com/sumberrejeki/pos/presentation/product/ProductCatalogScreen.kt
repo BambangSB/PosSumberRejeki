@@ -147,7 +147,7 @@ fun ProductCatalogScreen(
             } else {
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(gridColumns),
-                    contentPadding = PaddingValues(bottom = 100.dp),
+                    contentPadding = PaddingValues(bottom = 80.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                     modifier = Modifier.fillMaxSize()
@@ -178,7 +178,7 @@ fun ProductCatalogScreen(
                 shape = RoundedCornerShape(16.dp),
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(end = 16.dp, bottom = 80.dp)
+                    .padding(end = 16.dp, bottom = 16.dp)
             ) {
                 Icon(
                     imageVector = Icons.Default.Add,
@@ -191,7 +191,7 @@ fun ProductCatalogScreen(
             hostState = snackbarHostState,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 80.dp)
+                .padding(bottom = 16.dp)
         )
     }
 }

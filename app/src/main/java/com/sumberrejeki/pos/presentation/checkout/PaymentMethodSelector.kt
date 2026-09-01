@@ -2,9 +2,11 @@ package com.sumberrejeki.pos.presentation.checkout
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -36,7 +38,8 @@ fun PaymentMethodSelector(
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         PaymentMethodCard(
-            title = "Tunai (CASH)",
+            title = "Tunai (Cash)",
+            subtitle = "Uang Kertas / Koin",
             icon = Icons.Default.Payments,
             isSelected = selectedMethod == PaymentMethod.CASH,
             onClick = { onMethodSelected(PaymentMethod.CASH) },
@@ -44,7 +47,8 @@ fun PaymentMethodSelector(
         )
 
         PaymentMethodCard(
-            title = "Non-Tunai (CARD)",
+            title = "Non-Tunai (Card)",
+            subtitle = "Debit / QRIS / Transfer",
             icon = Icons.Default.CreditCard,
             isSelected = selectedMethod == PaymentMethod.CARD,
             onClick = { onMethodSelected(PaymentMethod.CARD) },
@@ -56,6 +60,7 @@ fun PaymentMethodSelector(
 @Composable
 private fun PaymentMethodCard(
     title: String,
+    subtitle: String,
     icon: ImageVector,
     isSelected: Boolean,
     onClick: () -> Unit,
@@ -72,12 +77,12 @@ private fun PaymentMethodCard(
             containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
             else MaterialTheme.colorScheme.surface
         ),
-        modifier = modifier
+        modifier = modifier.height(72.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(horizontal = 12.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
@@ -85,18 +90,28 @@ private fun PaymentMethodCard(
                 imageVector = icon,
                 contentDescription = title,
                 tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier.size(28.dp)
             )
 
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(10.dp))
 
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
-                ),
-                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-            )
+            Column(
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.Start
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleSmall.copy(
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold
+                    ),
+                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
     }
 }

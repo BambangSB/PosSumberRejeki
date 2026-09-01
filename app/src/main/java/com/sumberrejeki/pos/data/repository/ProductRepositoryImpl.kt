@@ -52,6 +52,12 @@ class ProductRepositoryImpl(
         productDao.deleteProductById(productId)
     }
 
+    override suspend fun deleteProducts(productIds: List<Long>) {
+        if (productIds.isNotEmpty()) {
+            productDao.deleteProductsByIds(productIds)
+        }
+    }
+
     override suspend fun getProductCount(): Int {
         return productDao.getProductCount()
     }

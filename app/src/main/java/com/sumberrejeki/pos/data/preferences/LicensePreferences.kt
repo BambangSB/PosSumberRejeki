@@ -46,6 +46,12 @@ class LicensePreferences(private val context: Context) {
         }
     }
 
+    suspend fun updateStoreName(newStoreName: String) {
+        context.licenseDataStore.edit { preferences ->
+            preferences[PreferencesKeys.KEY_LICENSED_TO] = newStoreName
+        }
+    }
+
     suspend fun clearLicense() {
         context.licenseDataStore.edit { preferences ->
             preferences[PreferencesKeys.KEY_IS_PREMIUM] = false

@@ -12,5 +12,6 @@ interface ProductRepository {
     suspend fun getProductByBarcode(barcode: String): Product?
     suspend fun saveProduct(product: Product): Long
     suspend fun deleteProduct(productId: Long)
+    suspend fun deleteProducts(productIds: List<Long>)
     suspend fun getProductCount(): Int
 }

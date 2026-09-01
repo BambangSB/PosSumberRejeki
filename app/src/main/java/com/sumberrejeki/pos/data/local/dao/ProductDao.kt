@@ -26,6 +26,9 @@ interface ProductDao {
     @Query("DELETE FROM products WHERE productId = :productId")
     suspend fun deleteProductById(productId: Long)
 
+    @Query("DELETE FROM products WHERE productId IN (:productIds)")
+    suspend fun deleteProductsByIds(productIds: List<Long>)
+
     @Query("SELECT * FROM products WHERE productId = :productId LIMIT 1")
     suspend fun getProductById(productId: Long): ProductEntity?
 

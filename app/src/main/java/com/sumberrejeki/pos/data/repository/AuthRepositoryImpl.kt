@@ -6,6 +6,7 @@ import com.sumberrejeki.pos.data.preferences.UserSessionDataStore
 import com.sumberrejeki.pos.domain.model.User
 import com.sumberrejeki.pos.domain.repository.AuthRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 class AuthRepositoryImpl(
@@ -41,6 +42,26 @@ class AuthRepositoryImpl(
 
     override suspend fun saveSession(user: User) {
         sessionDataStore.saveSession(user)
+    }
+
+    override suspend fun updateUsername(userId: Long, newUsername: String): Result<Unit> {
+        val trimmed = newUsername.trim()
+        if (trimmed.isBlank()) {
+            return Result.failure(IllegalArgumentException("Nama tidak boleh kosong"))
+        }
+        val existing = userDao.getUserById(userId)
+            ?: return Result.failure(IllegalArgumentException("Pengguna tidak ditemukan"))
+        val existingWithSameName = userDao.getUserByUsername(trimmed)
+        if (existingWithSameName != null && existingWithSameName.userId != userId) {
+            return Result.failure(IllegalStateException("Nama '$trimmed' sudah digunakan oleh akun lain"))
+        }
+        val updated = existing.copy(username = trimmed)
+        userDao.updateUser(updated)
+        val currentSession = sessionDataStore.currentSessionFlow.first()
+        if (currentSession?.userId == userId) {
+            sessionDataStore.saveSession(updated.toDomain())
+        }
+        return Result.success(Unit)
     }
 
     override suspend fun logout() {

@@ -11,6 +11,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
@@ -47,6 +48,9 @@ fun PosTopAppBar(
     cartItemCount: Int = 0,
     onCartClick: () -> Unit = {},
     showCartAction: Boolean = true,
+    notificationCount: Int = 0,
+    onNotificationClick: () -> Unit = {},
+    showNotificationAction: Boolean = false,
     actions: @Composable () -> Unit = {}
 ) {
     TopAppBar(
@@ -89,6 +93,31 @@ fun PosTopAppBar(
         },
         actions = {
             actions()
+
+            if (showNotificationAction) {
+                IconButton(onClick = onNotificationClick) {
+                    BadgedBox(
+                        badge = {
+                            if (notificationCount > 0) {
+                                Badge(
+                                    containerColor = MaterialTheme.colorScheme.error,
+                                    contentColor = MaterialTheme.colorScheme.onError
+                                ) {
+                                    Text(
+                                        text = if (notificationCount > 9) "9+" else notificationCount.toString(),
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Notifications,
+                            contentDescription = "Pusat Notifikasi & Info"
+                        )
+                    }
+                }
+            }
 
             if (showCartAction) {
                 IconButton(onClick = onCartClick) {

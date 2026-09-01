@@ -58,4 +58,8 @@ class LicenseRepositoryImpl(
     override suspend fun deactivateLicense() {
         licensePreferences.clearLicense()
     }
+
+    override suspend fun updateStoreName(newStoreName: String) {
+        licensePreferences.updateStoreName(newStoreName)
+    }
 }

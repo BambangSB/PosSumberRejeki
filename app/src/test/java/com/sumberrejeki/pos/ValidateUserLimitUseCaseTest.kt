@@ -25,6 +25,7 @@ class ValidateUserLimitUseCaseTest {
         override suspend fun registerUser(user: User): Long = 1L
         override suspend fun deleteUser(userId: Long) {}
         override suspend fun saveSession(user: User) {}
+        override suspend fun updateUsername(userId: Long, newUsername: String): Result<Unit> = Result.success(Unit)
         override suspend fun logout() {}
     }
 
@@ -39,6 +40,7 @@ class ValidateUserLimitUseCaseTest {
         override suspend fun verifyAndActivateLicense(licenseKeyString: String): Result<LicenseInfo> =
             Result.success(LicenseInfo(isPremium = true, maxUsers = 3))
         override suspend fun deactivateLicense() {}
+        override suspend fun updateStoreName(newStoreName: String) {}
     }
 
     @Test
