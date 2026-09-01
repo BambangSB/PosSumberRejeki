@@ -72,7 +72,7 @@ class OrderRepositoryImpl(
                 orderDao.insertOrder(orderEntity)
 
                 // 3. Insert Order Items
-                val itemEntities = order.items.map { OrderItemEntity.fromDomain(it) }
+                val itemEntities = order.items.map { OrderItemEntity.fromDomain(it.copy(orderId = order.orderId)) }
                 orderDao.insertOrderItems(itemEntities)
 
                 // 4. Clear cart drafts

@@ -41,8 +41,11 @@ class ProcessCheckoutUseCase(
         val finalAmountPaid = if (paymentMethod == PaymentMethod.CARD) totalAmount else amountPaid
         val changeAmount = calculateChangeUseCase(totalAmount, finalAmountPaid, paymentMethod)
 
+        val newOrderId = UUID.randomUUID().toString()
+        val assignedItems = items.map { it.copy(orderId = newOrderId) }
+
         val order = Order(
-            orderId = UUID.randomUUID().toString(),
+            orderId = newOrderId,
             customerName = customerName?.trim()?.ifEmpty { null },
             totalAmount = totalAmount,
             paymentMethod = paymentMethod,
@@ -51,7 +54,7 @@ class ProcessCheckoutUseCase(
             cashierId = cashierId,
             cashierName = cashierName,
             timestamp = System.currentTimeMillis(),
-            items = items
+            items = assignedItems
         )
 
         return orderRepository.processCheckout(order)

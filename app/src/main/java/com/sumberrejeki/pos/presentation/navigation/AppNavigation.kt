@@ -126,7 +126,7 @@ fun AppNavigation(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    val startDestination = if (currentSession != null) Screen.Home.route else Screen.Welcome.route
+    val startDestination = Screen.Welcome.route
 
     AdaptiveScaffold(
         currentRoute = currentRoute,

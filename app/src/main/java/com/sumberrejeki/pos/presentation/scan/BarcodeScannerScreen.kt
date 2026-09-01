@@ -1,6 +1,10 @@
 package com.sumberrejeki.pos.presentation.scan
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.view.ViewGroup
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
@@ -22,6 +26,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.FlashOff
 import androidx.compose.material.icons.filled.FlashOn
 import androidx.compose.material.icons.filled.Keyboard
@@ -71,10 +76,28 @@ fun BarcodeScannerScreen(
     val lifecycleOwner = LocalLifecycleOwner.current
     val uiState by viewModel.uiState.collectAsState()
 
+    var hasCameraPermission by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
+        )
+    }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        hasCameraPermission = isGranted
+    }
+
     var cameraInstance by remember { mutableStateOf<Camera?>(null) }
     var showManualInputDialog by remember { mutableStateOf(false) }
     var manualBarcodeText by remember { mutableStateOf("") }
     val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(Unit) {
+        if (!hasCameraPermission) {
+            permissionLauncher.launch(Manifest.permission.CAMERA)
+        }
+    }
 
     LaunchedEffect(Unit) {
         viewModel.navigationEvent.collect { event ->
@@ -102,102 +125,142 @@ fun BarcodeScannerScreen(
             .fillMaxSize()
             .background(Color.Black)
     ) {
-        // CameraX Live Preview View
-        AndroidView(
-            factory = { ctx ->
-                val previewView = PreviewView(ctx).apply {
-                    layoutParams = ViewGroup.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        ViewGroup.LayoutParams.MATCH_PARENT
-                    )
-                }
-
-                val cameraProviderFuture = ProcessCameraProvider.getInstance(ctx)
-                val executor = Executors.newSingleThreadExecutor()
-
-                cameraProviderFuture.addListener({
-                    val cameraProvider = cameraProviderFuture.get()
-                    val preview = Preview.Builder().build().also {
-                        it.setSurfaceProvider(previewView.surfaceProvider)
+        if (hasCameraPermission) {
+            // CameraX Live Preview View
+            AndroidView(
+                factory = { ctx ->
+                    val previewView = PreviewView(ctx).apply {
+                        layoutParams = ViewGroup.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            ViewGroup.LayoutParams.MATCH_PARENT
+                        )
+                        scaleType = PreviewView.ScaleType.FILL_CENTER
                     }
 
-                    val imageAnalysis = ImageAnalysis.Builder()
-                        .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                        .build()
-                        .also {
-                            it.setAnalyzer(executor, BarcodeAnalyzer { barcode ->
-                                viewModel.onBarcodeScanned(barcode)
-                            })
+                    val cameraProviderFuture = ProcessCameraProvider.getInstance(ctx)
+                    val executor = Executors.newSingleThreadExecutor()
+
+                    cameraProviderFuture.addListener({
+                        val cameraProvider = cameraProviderFuture.get()
+                        val preview = Preview.Builder().build().also {
+                            it.setSurfaceProvider(previewView.surfaceProvider)
                         }
 
-                    val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+                        val imageAnalysis = ImageAnalysis.Builder()
+                            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                            .build()
+                            .also {
+                                it.setAnalyzer(executor, BarcodeAnalyzer { barcode ->
+                                    viewModel.onBarcodeScanned(barcode)
+                                })
+                            }
 
-                    try {
-                        cameraProvider.unbindAll()
-                        cameraInstance = cameraProvider.bindToLifecycle(
-                            lifecycleOwner,
-                            cameraSelector,
-                            preview,
-                            imageAnalysis
-                        )
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
-                }, ContextCompat.getMainExecutor(ctx))
+                        val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
 
-                previewView
-            },
-            modifier = Modifier.fillMaxSize()
-        )
+                        try {
+                            cameraProvider.unbindAll()
+                            cameraInstance = cameraProvider.bindToLifecycle(
+                                lifecycleOwner,
+                                cameraSelector,
+                                preview,
+                                imageAnalysis
+                            )
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }, ContextCompat.getMainExecutor(ctx))
 
-        // Scanner Reticle Overlay
-        Canvas(modifier = Modifier.fillMaxSize()) {
-            val canvasWidth = size.width
-            val canvasHeight = size.height
-            val boxWidth = (canvasWidth * 0.75f).coerceAtMost(300.dp.toPx())
-            val boxHeight = (canvasHeight * 0.35f).coerceAtMost(200.dp.toPx())
-            val left = (canvasWidth - boxWidth) / 2f
-            val top = (canvasHeight - boxHeight) / 2f
-
-            // Darkened backdrop around reticle
-            drawRect(
-                color = Color.Black.copy(alpha = 0.5f),
-                size = size
+                    previewView
+                },
+                modifier = Modifier.fillMaxSize()
             )
 
-            // Transparent viewfinder window cutout
-            drawRoundRect(
-                color = Color.Transparent,
-                topLeft = Offset(left, top),
-                size = Size(boxWidth, boxHeight),
-                cornerRadius = CornerRadius(16.dp.toPx()),
-                blendMode = BlendMode.Clear
-            )
+            // Scanner Reticle Overlay
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                val canvasWidth = size.width
+                val canvasHeight = size.height
+                val boxWidth = (canvasWidth * 0.75f).coerceAtMost(300.dp.toPx())
+                val boxHeight = (canvasHeight * 0.35f).coerceAtMost(200.dp.toPx())
+                val left = (canvasWidth - boxWidth) / 2f
+                val top = (canvasHeight - boxHeight) / 2f
 
-            // Neon green corner borders
-            drawRoundRect(
-                color = Color(0xFF00E676),
-                topLeft = Offset(left, top),
-                size = Size(boxWidth, boxHeight),
-                cornerRadius = CornerRadius(16.dp.toPx()),
-                style = Stroke(width = 3.dp.toPx())
-            )
-        }
+                // Darkened backdrop around reticle
+                drawRect(
+                    color = Color.Black.copy(alpha = 0.5f),
+                    size = size
+                )
 
-        // Top Scanner Guide
-        Surface(
-            shape = RoundedCornerShape(20.dp),
-            color = Color.Black.copy(alpha = 0.65f),
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .padding(top = 32.dp)
-        ) {
-            Text(
-                text = "Arahkan kamera ke Barcode produk",
-                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                color = Color.White,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-            )
+                // Transparent viewfinder window cutout
+                drawRoundRect(
+                    color = Color.Transparent,
+                    topLeft = Offset(left, top),
+                    size = Size(boxWidth, boxHeight),
+                    cornerRadius = CornerRadius(16.dp.toPx()),
+                    blendMode = BlendMode.Clear
+                )
+
+                // Neon green corner borders
+                drawRoundRect(
+                    color = Color(0xFF00E676),
+                    topLeft = Offset(left, top),
+                    size = Size(boxWidth, boxHeight),
+                    cornerRadius = CornerRadius(16.dp.toPx()),
+                    style = Stroke(width = 3.dp.toPx())
+                )
+            }
+
+            // Top Scanner Guide
+            Surface(
+                shape = RoundedCornerShape(20.dp),
+                color = Color.Black.copy(alpha = 0.65f),
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = 32.dp)
+            ) {
+                Text(
+                    text = "Arahkan kamera ke Barcode produk",
+                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                    color = Color.White,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                )
+            }
+        } else {
+            // Permission Request Placeholder Screen
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(32.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.CameraAlt,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(72.dp)
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "Izin Kamera Diperlukan",
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                    color = Color.White,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Aplikasi memerlukan izin kamera untuk memindai barcode kemasan produk secara instan.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.LightGray,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+                Button(
+                    onClick = { permissionLauncher.launch(Manifest.permission.CAMERA) },
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("Izinkan Akses Kamera")
+                }
+            }
         }
 
         // Bottom Controls: Flashlight & Manual Input
