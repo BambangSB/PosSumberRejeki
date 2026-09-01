@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.sumberrejeki.pos"
-    compileSdk = 35
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.sumberrejeki.pos"
