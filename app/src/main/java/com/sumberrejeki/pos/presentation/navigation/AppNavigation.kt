@@ -120,21 +120,74 @@ fun AppNavigation(
     }
 
     val currentSession by authViewModel.currentSession.collectAsState()
-    val allUsers by authViewModel.allUsers.collectAsState()
     val totalCartItems by productViewModel.totalCartItems.collectAsState()
     val totalCartPrice by productViewModel.totalCartPrice.collectAsState()
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    val isAuthScreen = currentRoute == Screen.Welcome.route || currentRoute == Screen.RegisterAdmin.route
-
     val startDestination = if (currentSession != null) Screen.Home.route else Screen.Welcome.route
 
-    if (isAuthScreen) {
+    AdaptiveScaffold(
+        currentRoute = currentRoute,
+        onNavigateToRoute = { route ->
+            navController.navigate(route) {
+                popUpTo(Screen.Home.route) {
+                    saveState = true
+                }
+                launchSingleTop = true
+                restoreState = true
+            }
+        },
+        userRole = currentSession?.role,
+        topBar = {
+            val title = when (currentRoute) {
+                Screen.Home.route -> "Sumber Rejeki POS"
+                Screen.Catalog.route -> "Katalog Produk"
+                Screen.BarcodeScanner.route -> "Scan Barcode"
+                Screen.History.route -> "Riwayat Transaksi"
+                Screen.Profile.route -> "Pengaturan Toko"
+                else -> "Sumber Rejeki POS"
+            }
+
+            val showTopBar = currentRoute in listOf(
+                Screen.Home.route,
+                Screen.Catalog.route,
+                Screen.History.route,
+                Screen.Profile.route
+            )
+
+            if (showTopBar) {
+                PosTopAppBar(
+                    title = title,
+                    userRole = currentSession?.role,
+                    userName = currentSession?.username,
+                    cartItemCount = totalCartItems,
+                    onCartClick = { navController.navigate(Screen.Checkout.route) },
+                    showCartAction = currentRoute != Screen.Profile.route
+                )
+            }
+        },
+        floatingSummaryCard = {
+            val showFloatingCard = currentRoute in listOf(
+                Screen.Home.route,
+                Screen.Catalog.route,
+                Screen.BarcodeScanner.route
+            ) && totalCartItems > 0
+
+            if (showFloatingCard) {
+                FloatingSummaryCard(
+                    totalItems = totalCartItems,
+                    totalPrice = totalCartPrice,
+                    onCheckoutClick = { navController.navigate(Screen.Checkout.route) }
+                )
+            }
+        }
+    ) { modifier ->
         NavHost(
             navController = navController,
-            startDestination = if (allUsers.isEmpty()) Screen.RegisterAdmin.route else Screen.Welcome.route
+            startDestination = startDestination,
+            modifier = modifier
         ) {
             composable(Screen.Welcome.route) {
                 WelcomeScreen(
@@ -160,182 +213,119 @@ fun AppNavigation(
                     }
                 )
             }
-        }
-    } else {
-        AdaptiveScaffold(
-            currentRoute = currentRoute,
-            onNavigateToRoute = { route ->
-                navController.navigate(route) {
-                    popUpTo(Screen.Home.route) {
-                        saveState = true
-                    }
-                    launchSingleTop = true
-                    restoreState = true
-                }
-            },
-            userRole = currentSession?.role,
-            topBar = {
-                val title = when (currentRoute) {
-                    Screen.Home.route -> "Sumber Rejeki POS"
-                    Screen.Catalog.route -> "Katalog Produk"
-                    Screen.BarcodeScanner.route -> "Scan Barcode"
-                    Screen.History.route -> "Riwayat Transaksi"
-                    Screen.Profile.route -> "Pengaturan Toko"
-                    else -> "Sumber Rejeki POS"
-                }
 
-                val showTopBar = currentRoute in listOf(
-                    Screen.Home.route,
-                    Screen.Catalog.route,
-                    Screen.History.route,
-                    Screen.Profile.route
+            composable(Screen.Home.route) {
+                HomeScreen(
+                    viewModel = homeViewModel,
+                    onNavigateToCatalog = { navController.navigate(Screen.Catalog.route) },
+                    onNavigateToScanner = { navController.navigate(Screen.BarcodeScanner.route) },
+                    onNavigateToHistory = { navController.navigate(Screen.History.route) },
+                    onNavigateToReport = { navController.navigate(Screen.FinancialReport.route) }
                 )
-
-                if (showTopBar) {
-                    PosTopAppBar(
-                        title = title,
-                        userRole = currentSession?.role,
-                        userName = currentSession?.username,
-                        cartItemCount = totalCartItems,
-                        onCartClick = { navController.navigate(Screen.Checkout.route) },
-                        showCartAction = currentRoute != Screen.Profile.route
-                    )
-                }
-            },
-            floatingSummaryCard = {
-                val showFloatingCard = currentRoute in listOf(
-                    Screen.Home.route,
-                    Screen.Catalog.route,
-                    Screen.BarcodeScanner.route
-                ) && totalCartItems > 0
-
-                if (showFloatingCard) {
-                    FloatingSummaryCard(
-                        totalItems = totalCartItems,
-                        totalPrice = totalCartPrice,
-                        onCheckoutClick = { navController.navigate(Screen.Checkout.route) }
-                    )
-                }
             }
-        ) { modifier ->
-            NavHost(
-                navController = navController,
-                startDestination = startDestination,
-                modifier = modifier
-            ) {
-                composable(Screen.Home.route) {
-                    HomeScreen(
-                        viewModel = homeViewModel,
-                        onNavigateToCatalog = { navController.navigate(Screen.Catalog.route) },
-                        onNavigateToScanner = { navController.navigate(Screen.BarcodeScanner.route) },
-                        onNavigateToHistory = { navController.navigate(Screen.History.route) },
-                        onNavigateToReport = { navController.navigate(Screen.FinancialReport.route) }
-                    )
-                }
 
-                composable(Screen.Catalog.route) {
-                    ProductCatalogScreen(
-                        viewModel = productViewModel,
-                        userRole = currentSession?.role,
-                        onNavigateToAddProduct = {
-                            navController.navigate(Screen.AddEditProduct.createRoute())
-                        },
-                        onNavigateToEditProduct = { productId ->
-                            navController.navigate(Screen.AddEditProduct.createRoute(productId = productId))
+            composable(Screen.Catalog.route) {
+                ProductCatalogScreen(
+                    viewModel = productViewModel,
+                    userRole = currentSession?.role,
+                    onNavigateToAddProduct = {
+                        navController.navigate(Screen.AddEditProduct.createRoute())
+                    },
+                    onNavigateToEditProduct = { productId ->
+                        navController.navigate(Screen.AddEditProduct.createRoute(productId = productId))
+                    }
+                )
+            }
+
+            composable(
+                route = Screen.AddEditProduct.route,
+                arguments = listOf(
+                    navArgument("productId") {
+                        type = NavType.LongType
+                        defaultValue = 0L
+                    },
+                    navArgument("barcode") {
+                        type = NavType.StringType
+                        defaultValue = ""
+                    }
+                )
+            ) { backStackEntry ->
+                val productId = backStackEntry.arguments?.getLong("productId") ?: 0L
+                val barcode = backStackEntry.arguments?.getString("barcode")
+                AddEditProductScreen(
+                    viewModel = productViewModel,
+                    productId = productId,
+                    prefilledBarcode = barcode,
+                    userRole = currentSession?.role,
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+
+            composable(Screen.BarcodeScanner.route) {
+                BarcodeScannerScreen(
+                    viewModel = scannerViewModel,
+                    onNavigateToAddProduct = { scannedBarcode ->
+                        navController.navigate(Screen.AddEditProduct.createRoute(barcode = scannedBarcode))
+                    }
+                )
+            }
+
+            composable(Screen.Checkout.route) {
+                OrderConfirmationScreen(
+                    viewModel = checkoutViewModel,
+                    onNavigateBack = { navController.popBackStack() },
+                    onCheckoutSuccess = { orderId ->
+                        navController.navigate(Screen.PaymentSuccess.createRoute(orderId)) {
+                            popUpTo(Screen.Home.route)
                         }
-                    )
-                }
+                    }
+                )
+            }
 
-                composable(
-                    route = Screen.AddEditProduct.route,
-                    arguments = listOf(
-                        navArgument("productId") {
-                            type = NavType.LongType
-                            defaultValue = 0L
-                        },
-                        navArgument("barcode") {
-                            type = NavType.StringType
-                            defaultValue = ""
+            composable(
+                route = Screen.PaymentSuccess.route,
+                arguments = listOf(
+                    navArgument("orderId") { type = NavType.StringType }
+                )
+            ) { backStackEntry ->
+                val orderId = backStackEntry.arguments?.getString("orderId") ?: ""
+                SuccessPaymentScreen(
+                    viewModel = checkoutViewModel,
+                    orderId = orderId,
+                    onNewTransactionClick = {
+                        navController.navigate(Screen.Catalog.route) {
+                            popUpTo(Screen.Home.route)
                         }
-                    )
-                ) { backStackEntry ->
-                    val productId = backStackEntry.arguments?.getLong("productId") ?: 0L
-                    val barcode = backStackEntry.arguments?.getString("barcode")
-                    AddEditProductScreen(
-                        viewModel = productViewModel,
-                        productId = productId,
-                        prefilledBarcode = barcode,
-                        userRole = currentSession?.role,
-                        onNavigateBack = { navController.popBackStack() }
-                    )
-                }
+                    }
+                )
+            }
 
-                composable(Screen.BarcodeScanner.route) {
-                    BarcodeScannerScreen(
-                        viewModel = scannerViewModel,
-                        onNavigateToAddProduct = { scannedBarcode ->
-                            navController.navigate(Screen.AddEditProduct.createRoute(barcode = scannedBarcode))
+            composable(Screen.History.route) {
+                HistoryScreen(
+                    viewModel = historyViewModel,
+                    userRole = currentSession?.role,
+                    onNavigateToReport = { navController.navigate(Screen.FinancialReport.route) }
+                )
+            }
+
+            composable(Screen.FinancialReport.route) {
+                FinancialReportScreen(
+                    viewModel = historyViewModel,
+                    userRole = currentSession?.role,
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+
+            composable(Screen.Profile.route) {
+                ProfileScreen(
+                    viewModel = profileViewModel,
+                    onLogoutSuccess = {
+                        authViewModel.resetState()
+                        navController.navigate(Screen.Welcome.route) {
+                            popUpTo(0) { inclusive = true }
                         }
-                    )
-                }
-
-                composable(Screen.Checkout.route) {
-                    OrderConfirmationScreen(
-                        viewModel = checkoutViewModel,
-                        onNavigateBack = { navController.popBackStack() },
-                        onCheckoutSuccess = { orderId ->
-                            navController.navigate(Screen.PaymentSuccess.createRoute(orderId)) {
-                                popUpTo(Screen.Home.route)
-                            }
-                        }
-                    )
-                }
-
-                composable(
-                    route = Screen.PaymentSuccess.route,
-                    arguments = listOf(
-                        navArgument("orderId") { type = NavType.StringType }
-                    )
-                ) { backStackEntry ->
-                    val orderId = backStackEntry.arguments?.getString("orderId") ?: ""
-                    SuccessPaymentScreen(
-                        viewModel = checkoutViewModel,
-                        orderId = orderId,
-                        onNewTransactionClick = {
-                            navController.navigate(Screen.Catalog.route) {
-                                popUpTo(Screen.Home.route)
-                            }
-                        }
-                    )
-                }
-
-                composable(Screen.History.route) {
-                    HistoryScreen(
-                        viewModel = historyViewModel,
-                        userRole = currentSession?.role,
-                        onNavigateToReport = { navController.navigate(Screen.FinancialReport.route) }
-                    )
-                }
-
-                composable(Screen.FinancialReport.route) {
-                    FinancialReportScreen(
-                        viewModel = historyViewModel,
-                        userRole = currentSession?.role,
-                        onNavigateBack = { navController.popBackStack() }
-                    )
-                }
-
-                composable(Screen.Profile.route) {
-                    ProfileScreen(
-                        viewModel = profileViewModel,
-                        onLogoutSuccess = {
-                            authViewModel.resetState()
-                            navController.navigate(Screen.Welcome.route) {
-                                popUpTo(0) { inclusive = true }
-                            }
-                        }
-                    )
-                }
+                    }
+                )
             }
         }
     }
