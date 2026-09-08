@@ -1,4 +1,4 @@
-package com.sumberrejeki.pos.presentation.components
+﻿package com.sumberrejeki.pos.presentation.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.WifiOff
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -35,6 +36,7 @@ import androidx.compose.ui.unit.sp
 import com.sumberrejeki.pos.domain.model.UserRole
 import com.sumberrejeki.pos.presentation.theme.RoleAdminBadge
 import com.sumberrejeki.pos.presentation.theme.RoleCashierBadge
+import com.sumberrejeki.pos.presentation.theme.SuccessGreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,6 +53,7 @@ fun PosTopAppBar(
     notificationCount: Int = 0,
     onNotificationClick: () -> Unit = {},
     showNotificationAction: Boolean = false,
+    showOfflineBadge: Boolean = true,
     actions: @Composable () -> Unit = {}
 ) {
     TopAppBar(
@@ -58,25 +61,61 @@ fun PosTopAppBar(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp
+                    ),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
 
                 if (userRole != null) {
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
                     val badgeColor = if (userRole == UserRole.ADMIN) RoleAdminBadge else RoleCashierBadge
                     Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = badgeColor.copy(alpha = 0.15f),
-                        modifier = Modifier.padding(start = 4.dp)
+                        shape = RoundedCornerShape(8.dp),
+                        color = badgeColor.copy(alpha = 0.12f),
+                        modifier = Modifier.padding(start = 2.dp)
                     ) {
                         Text(
                             text = if (userRole == UserRole.ADMIN) "ADMIN" else "KASIR",
                             color = badgeColor,
-                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontWeight = FontWeight.ExtraBold,
+                                fontSize = 10.sp
+                            ),
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                         )
+                    }
+                }
+
+                if (showOfflineBadge) {
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = SuccessGreen.copy(alpha = 0.12f),
+                        modifier = Modifier.padding(start = 2.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(6.dp)
+                                    .clip(CircleShape)
+                                    .background(SuccessGreen)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "Offline OK",
+                                color = SuccessGreen,
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 10.sp
+                                )
+                            )
+                        }
                     }
                 }
             }
@@ -125,8 +164,8 @@ fun PosTopAppBar(
                         badge = {
                             if (cartItemCount > 0) {
                                 Badge(
-                                    containerColor = MaterialTheme.colorScheme.tertiary,
-                                    contentColor = MaterialTheme.colorScheme.onTertiary
+                                    containerColor = MaterialTheme.colorScheme.primary,
+                                    contentColor = MaterialTheme.colorScheme.onPrimary
                                 ) {
                                     Text(
                                         text = if (cartItemCount > 99) "99+" else cartItemCount.toString(),

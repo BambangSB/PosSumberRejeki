@@ -17,3 +17,5 @@ local.properties
 *.jks
 *.keystore
 .navigation
+tools/production_private_key.b64
+tools/*private*.b64

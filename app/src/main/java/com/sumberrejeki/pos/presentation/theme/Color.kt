@@ -1,31 +1,45 @@
-package com.sumberrejeki.pos.presentation.theme
+﻿package com.sumberrejeki.pos.presentation.theme
 
 import androidx.compose.ui.graphics.Color
 
-val GreenPrimary = Color(0xFF00796B)
-val GreenPrimaryDark = Color(0xFF004D40)
-val GreenSecondary = Color(0xFF26A69A)
-val GreenContainer = Color(0xFFE0F2F1)
-val OnGreenContainer = Color(0xFF004D40)
+// Olsera / Modern POS Blue Primary Palette
+val PosBluePrimary = Color(0xFF0062FF)
+val PosBlueDark = Color(0xFF0048C4)
+val PosBlueSecondary = Color(0xFF0F62FE)
+val PosBlueContainer = Color(0xFFEDF5FF)
+val OnPosBlueContainer = Color(0xFF002D9C)
 
-val AccentAmber = Color(0xFFFFB300)
-val AccentAmberDark = Color(0xFFFF8F00)
-val AmberContainer = Color(0xFFFFF8E1)
+// Backward compatibility aliases for existing usages
+val GreenPrimary = PosBluePrimary
+val GreenPrimaryDark = PosBlueDark
+val GreenSecondary = PosBlueSecondary
+val GreenContainer = PosBlueContainer
+val OnGreenContainer = OnPosBlueContainer
 
-val SurfaceLight = Color(0xFFFBFDFD)
-val SurfaceVariantLight = Color(0xFFEAEFEF)
-val BackgroundLight = Color(0xFFF5F7F8)
-val OnSurfaceLight = Color(0xFF191C1D)
-val OutlineLight = Color(0xFF707978)
+// Warm Accents
+val AccentAmber = Color(0xFFF59E0B)
+val AccentAmberDark = Color(0xFFD97706)
+val AmberContainer = Color(0xFFFFFBEB)
 
-val SurfaceDark = Color(0xFF121414)
-val SurfaceVariantDark = Color(0xFF2E3333)
-val BackgroundDark = Color(0xFF191C1D)
-val OnSurfaceDark = Color(0xFFE1E3E3)
-val OutlineDark = Color(0xFF8A9392)
+// Surfaces & Backgrounds - Clean Light Theme
+val SurfaceLight = Color(0xFFFFFFFF)
+val SurfaceVariantLight = Color(0xFFF1F5F9)
+val BackgroundLight = Color(0xFFF8FAFC)
+val OnSurfaceLight = Color(0xFF0F172A)
+val OutlineLight = Color(0xFFCBD5E1)
+val OutlineVariantLight = Color(0xFFE2E8F0)
 
-val RoleAdminBadge = Color(0xFFD32F2F)
-val RoleCashierBadge = Color(0xFF1976D2)
-val PremiumGold = Color(0xFFFFD700)
-val SuccessGreen = Color(0xFF2E7D32)
-val ErrorRed = Color(0xFFC62828)
+// Surfaces & Backgrounds - Modern Slate Dark Theme
+val SurfaceDark = Color(0xFF1E293B)
+val SurfaceVariantDark = Color(0xFF334155)
+val BackgroundDark = Color(0xFF0F172A)
+val OnSurfaceDark = Color(0xFFF8FAFC)
+val OutlineDark = Color(0xFF64748B)
+
+// Roles & Badges
+val RoleAdminBadge = Color(0xFFE11D48)
+val RoleCashierBadge = Color(0xFF0062FF)
+val OfflineStatusPill = Color(0xFF0284C7)
+val PremiumGold = Color(0xFFF59E0B)
+val SuccessGreen = Color(0xFF10B981)
+val ErrorRed = Color(0xFFEF4444)

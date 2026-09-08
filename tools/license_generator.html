@@ -1,0 +1,195 @@
+﻿<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sumber Rejeki - License Key Generator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    :root{--bg:#0d1117;--bg2:#161b22;--bgc:#1c2128;--bgi:#21262d;--bdr:#30363d;--bdf:#58a6ff;--tp:#e6edf3;--ts:#8b949e;--tm:#484f58;--blue:#58a6ff;--green:#3fb950;--glow:rgba(63,185,80,0.2);--orange:#d29922;--red:#f85149;--purple:#bc8cff;--grad:linear-gradient(135deg,#58a6ff 0%,#bc8cff 100%)}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--tp);min-height:100vh;padding:24px 16px 48px}
+    .header{text-align:center;margin-bottom:32px;padding-bottom:24px;border-bottom:1px solid var(--bdr)}
+    .badge{display:inline-flex;align-items:center;gap:6px;background:rgba(188,140,255,0.1);border:1px solid rgba(188,140,255,0.3);color:var(--purple);padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin-bottom:12px}
+    h1{font-size:clamp(22px,4vw,32px);font-weight:800;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:6px}
+    .header p{font-size:13px;color:var(--ts)}
+    .container{max-width:720px;margin:0 auto}
+    .card{background:var(--bgc);border:1px solid var(--bdr);border-radius:12px;padding:24px;margin-bottom:16px}
+    .ct{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--ts);text-transform:uppercase;letter-spacing:.06em;margin-bottom:18px}
+    .dot{width:8px;height:8px;border-radius:50%;background:var(--blue);flex-shrink:0}
+    .dot.g{background:var(--green)}.dot.o{background:var(--orange)}
+    .field{margin-bottom:14px}
+    label{display:block;font-size:12px;font-weight:600;color:var(--ts);margin-bottom:6px}
+    label .req{color:var(--red)}
+    input,select,textarea{width:100%;background:var(--bgi);border:1px solid var(--bdr);border-radius:8px;padding:10px 12px;font-family:inherit;font-size:14px;color:var(--tp);outline:none;transition:border-color .2s}
+    input:focus,select:focus,textarea:focus{border-color:var(--bdf);box-shadow:0 0 0 3px rgba(88,166,255,.1)}
+    input::placeholder{color:var(--tm)}
+    select option{background:var(--bg2)}
+    .fr{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    @media(max-width:480px){.fr{grid-template-columns:1fr}}
+    #pkey{font-family:'JetBrains Mono',monospace;font-size:11px;height:90px;resize:vertical;line-height:1.5}
+    .hint{margin-top:6px;font-size:11px;color:var(--tm)}
+    .tg{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .to{position:relative}
+    .to input[type=radio]{display:none}
+    .to label{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--bgi);border:1px solid var(--bdr);border-radius:8px;cursor:pointer;margin:0;transition:all .15s;font-size:13px;font-weight:700;color:var(--tp)}
+    .to label .ti{font-size:20px}
+    .ti2{font-size:11px;color:var(--tm);margin-top:1px;font-weight:400}
+    .to input:checked+label{border-color:var(--purple);background:rgba(188,140,255,.08)}
+    .btn-g{width:100%;padding:14px;background:var(--grad);border:none;border-radius:10px;color:#fff;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .2s,transform .1s;margin-top:4px}
+    .btn-g:hover{opacity:.9}.btn-g:active{transform:scale(.99)}.btn-g:disabled{opacity:.5;cursor:not-allowed}
+    #out{display:none}#out.v{display:block}
+    .ob{position:relative;background:#0d1117;border:1px solid var(--green);border-radius:10px;padding:16px 16px 14px;box-shadow:0 0 20px var(--glow)}
+    .ol{font-size:11px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+    .ol::before{content:'';width:8px;height:8px;background:var(--green);border-radius:50%;display:inline-block;animation:pulse 1.5s ease-in-out infinite}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+    #lo{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--green);word-break:break-all;line-height:1.6;max-height:140px;overflow-y:auto}
+    .oa{display:flex;gap:8px;margin-top:12px}
+    .bc,.br{flex:1;padding:9px;border-radius:8px;border:1px solid;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .15s}
+    .bc{background:var(--glow);border-color:var(--green);color:var(--green)}
+    .bc:hover{background:rgba(63,185,80,.3)}.bc.c{background:var(--green);color:#0d1117}
+    .br{background:rgba(248,81,73,.1);border-color:rgba(248,81,73,.3);color:var(--red)}
+    .br:hover{background:rgba(248,81,73,.2)}
+    .pp{margin-top:12px;background:var(--bg2);border:1px solid var(--bdr);border-radius:8px;padding:12px}
+    .pp summary{font-size:11px;font-weight:600;color:var(--ts);cursor:pointer;user-select:none;list-style:none;display:flex;align-items:center;gap:6px}
+    .pp summary::after{content:' v';font-size:9px}.pp[open] summary::after{content:' ^'}
+    .pp pre{margin-top:10px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--blue);white-space:pre-wrap;line-height:1.6}
+    .eb{background:rgba(248,81,73,.08);border:1px solid rgba(248,81,73,.3);border-radius:8px;padding:12px 14px;color:var(--red);font-size:13px;margin-top:12px;display:none}
+    .eb.v{display:block}
+    .ir{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+    .ip{display:inline-flex;align-items:center;gap:5px;background:var(--bg2);border:1px solid var(--bdr);border-radius:20px;padding:4px 10px;font-size:11px;color:var(--ts)}
+    .ip .dot{width:6px;height:6px}
+    .sp{width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;display:none}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    hr.dv{border:none;border-top:1px solid var(--bdr);margin:16px 0}
+    .wn{background:rgba(210,153,34,.08);border:1px solid rgba(210,153,34,.25);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--orange);display:flex;gap:8px}
+    .wn::before{content:'!';flex-shrink:0;font-weight:900;font-size:14px}
+    code{font-family:'JetBrains Mono',monospace;font-size:10px;background:rgba(255,255,255,.05);padding:1px 4px;border-radius:3px}
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="badge">Admin Only</div>
+    <h1>Sumber Rejeki License Generator</h1>
+    <p>Generate license key offline -- berjalan 100% di browser, tidak ada data dikirim ke server</p>
+  </div>
+  <div class="card">
+    <div class="ct"><span class="dot o"></span>Step 1 -- Private Key (RSA-2048 PKCS#8)</div>
+    <div class="wn">Paste Private Key dari file <code>tools/production_private_key.b64</code>. Jangan simpan key ini di browser. Setelah selesai, tutup tab ini.</div>
+    <div class="field" style="margin-top:14px">
+      <label for="pkey">Private Key (Base64, PKCS#8) <span class="req">*</span></label>
+      <textarea id="pkey" placeholder="Paste Base64 Private Key di sini..."></textarea>
+      <div class="hint">Salin seluruh isi file <code>tools/production_private_key.b64</code> lalu paste di sini</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ct"><span class="dot"></span>Step 2 -- Informasi Lisensi</div>
+    <div class="field">
+      <label for="iid">Installation ID <span class="req">*</span></label>
+      <input type="text" id="iid" placeholder="Contoh: A1B2C3D4" maxlength="64" style="font-family:'JetBrains Mono',monospace;letter-spacing:.05em" />
+    </div>
+    <div class="field">
+      <label for="lto">Nama Toko / Pelanggan <span class="req">*</span></label>
+      <input type="text" id="lto" placeholder="Contoh: Toko Berkah Makmur" />
+    </div>
+    <div class="field">
+      <label>Tier Lisensi <span class="req">*</span></label>
+      <div class="tg">
+        <div class="to">
+          <input type="radio" id="tp" name="tier" value="PREMIUM" checked />
+          <label for="tp"><span class="ti">&#11088;</span><div><div>PREMIUM</div><div class="ti2">Max 3 kasir</div></div></label>
+        </div>
+        <div class="to">
+          <input type="radio" id="tb" name="tier" value="BASIC" />
+          <label for="tb"><span class="ti">&#129689;</span><div><div>BASIC</div><div class="ti2">Max 1 kasir</div></div></label>
+        </div>
+      </div>
+    </div>
+    <div class="field">
+      <label for="exp">Tanggal Expired (opsional -- kosongkan untuk seumur hidup)</label>
+      <input type="date" id="exp" />
+    </div>
+    <hr class="dv" />
+    <button class="btn-g" id="btnG" onclick="gen()">
+      <div class="sp" id="sp"></div>
+      <span id="bt">Generate License Key</span>
+    </button>
+  </div>
+  <div class="card" id="out">
+    <div class="ct"><span class="dot g"></span>License Key -- Siap Kirim ke Pelanggan</div>
+    <div class="ob">
+      <div class="ol">License Key Generated</div>
+      <div id="lo"></div>
+    </div>
+    <div class="oa">
+      <button class="bc" id="btnC" onclick="cp()">Copy ke Clipboard</button>
+      <button class="br" onclick="rst()">Reset Form</button>
+    </div>
+    <details class="pp" id="ppd">
+      <summary>Lihat Detail Payload</summary>
+      <pre id="pj"></pre>
+    </details>
+    <div class="ir">
+      <div class="ip"><span class="dot g"></span>SHA256withRSA</div>
+      <div class="ip"><span class="dot g"></span>RSA-2048</div>
+      <div class="ip"><span class="dot g"></span>100% Offline</div>
+      <div class="ip" id="ptier">PREMIUM</div>
+      <div class="ip" id="pexp">No Expiry</div>
+    </div>
+  </div>
+  <div class="eb" id="eb"></div>
+</div>
+<script>
+function b64d(s){s=s.trim().replace(/\s/g,'').replace(/-/g,'+').replace(/_/g,'/');var p=s.length%4;if(p)s+='='.repeat(4-p);var b=atob(s);return Uint8Array.from(b,function(c){return c.charCodeAt(0)})}
+function b64e(b){var s='';for(var i=0;i<b.length;i++)s+=String.fromCharCode(b[i]);return btoa(s)}
+async function impK(b64){var kb=b64d(b64);return crypto.subtle.importKey('pkcs8',kb.buffer,{name:'RSASSA-PKCS1-v1_5',hash:'SHA-256'},false,['sign'])}
+async function gen(){
+  var btn=document.getElementById('btnG'),sp=document.getElementById('sp'),bt=document.getElementById('bt'),eb=document.getElementById('eb'),out=document.getElementById('out');
+  eb.className='eb';out.className='card';
+  var pk=document.getElementById('pkey').value.trim();
+  var iid=document.getElementById('iid').value.trim().toUpperCase();
+  var lto=document.getElementById('lto').value.trim();
+  var tier=document.querySelector('input[name=tier]:checked').value;
+  var expV=document.getElementById('exp').value;
+  if(!pk){showErr('Private Key belum diisi. Paste isi file production_private_key.b64 di Step 1.');return}
+  if(!iid){showErr('Installation ID belum diisi.');return}
+  if(!lto){showErr('Nama toko / pelanggan belum diisi.');return}
+  btn.disabled=true;sp.style.display='block';bt.textContent='Generating...';
+  try{
+    var pl={installationId:iid,licensedTo:lto,tier:tier,issuedAt:Date.now()};
+    if(expV){var d=new Date(expV+'T23:59:59+07:00');pl.expiresAt=d.getTime()}
+    var js=JSON.stringify(pl);
+    var pb=new TextEncoder().encode(js);
+    var pb64=b64e(pb);
+    var priv=await impK(pk);
+    var sig=await crypto.subtle.sign('RSASSA-PKCS1-v1_5',priv,pb.buffer);
+    var sb64=b64e(new Uint8Array(sig));
+    var lk=pb64+'.'+sb64;
+    document.getElementById('lo').textContent=lk;
+    document.getElementById('pj').textContent=JSON.stringify(pl,null,2);
+    document.getElementById('ptier').textContent=tier==='PREMIUM'?'PREMIUM':'BASIC';
+    document.getElementById('pexp').textContent=expV?'Expired: '+new Date(expV+'T00:00:00+07:00').toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'}):'Seumur Hidup';
+    out.className='card v';out.scrollIntoView({behavior:'smooth',block:'start'});
+  }catch(e){
+    console.error(e);var m=e.message||'Unknown error';
+    if(e.name==='DataError'||m.indexOf('import')>-1||m.indexOf('key')>-1)m='Format Private Key tidak valid. Pastikan copy seluruh isi file production_private_key.b64.';
+    showErr('Error: '+m);
+  }finally{btn.disabled=false;sp.style.display='none';bt.textContent='Generate License Key'}
+}
+function showErr(m){var b=document.getElementById('eb');b.textContent=m;b.className='eb v';b.scrollIntoView({behavior:'smooth',block:'nearest'})}
+async function cp(){
+  var t=document.getElementById('lo').textContent,btn=document.getElementById('btnC');
+  try{await navigator.clipboard.writeText(t)}catch(e){var ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta)}
+  btn.textContent='Tersalin!';btn.classList.add('c');
+  setTimeout(function(){btn.textContent='Copy ke Clipboard';btn.classList.remove('c')},2000);
+}
+function rst(){
+  document.getElementById('out').className='card';document.getElementById('eb').className='eb';
+  document.getElementById('iid').value='';document.getElementById('lto').value='';
+  document.getElementById('exp').value='';document.getElementById('tp').checked=true;
+  document.getElementById('iid').focus();
+}
+</script>
+</body>
+</html>

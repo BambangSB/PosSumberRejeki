@@ -15,7 +15,6 @@ import com.sumberrejeki.pos.domain.usecase.auth.DeleteStaffUserUseCase
 import com.sumberrejeki.pos.domain.usecase.auth.GetCurrentSessionUseCase
 import com.sumberrejeki.pos.domain.usecase.auth.GetStaffUsersUseCase
 import com.sumberrejeki.pos.domain.usecase.auth.LogoutUseCase
-import com.sumberrejeki.pos.domain.usecase.license.GenerateLicenseHelper
 import com.sumberrejeki.pos.domain.usecase.license.GetLicenseStatusUseCase
 import com.sumberrejeki.pos.domain.usecase.license.VerifyRsaLicenseUseCase
 import com.sumberrejeki.pos.domain.usecase.product.DeleteProductUseCase
@@ -117,14 +116,6 @@ class ProfileViewModel(
                     errorMessage = error.message ?: "Verifikasi lisensi gagal"
                 )
             }
-        }
-    }
-
-    fun generateDemoLicenseForTesting() {
-        val id = _uiState.value.installationId
-        if (id.isNotBlank()) {
-            val demoKey = GenerateLicenseHelper.generateOfflineLicenseForDevice(id, "Toko Sumber Rejeki")
-            _uiState.value = _uiState.value.copy(licenseKeyInput = demoKey)
         }
     }
 

@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -50,12 +51,13 @@ import com.sumberrejeki.pos.presentation.theme.SuccessGreen
 @Composable
 fun UpgradeLicenseModal(
     installationId: String,
+    licensedTo: String,
     licenseKeyInput: String,
     isActivating: Boolean,
     errorMessage: String?,
     onLicenseKeyChange: (String) -> Unit,
     onActivateClick: () -> Unit,
-    onGenerateDemoKey: () -> Unit,
+    onRequestKeyToCS: () -> Unit,
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
@@ -142,6 +144,21 @@ fun UpgradeLicenseModal(
                             )
                         }
                     }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Nama Toko:",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = licensedTo,
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp
+                        ),
+                        color = MaterialTheme.colorScheme.primary
+                    )
                 }
             }
 
@@ -191,13 +208,26 @@ fun UpgradeLicenseModal(
                 }
             }
 
-            // Demo testing key generator
-            OutlinedButton(
-                onClick = onGenerateDemoKey,
+            // Request Key to CS Button
+            Button(
+                onClick = onRequestKeyToCS,
                 shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.fillMaxWidth()
+                colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
             ) {
-                Text("Isi Kunci Lisensi Demo Otomatis")
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.Chat,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Text("Minta Kunci Lisensi via WhatsApp", fontWeight = FontWeight.Bold, color = androidx.compose.ui.graphics.Color.White)
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))

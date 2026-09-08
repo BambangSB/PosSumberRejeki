@@ -1,4 +1,4 @@
-package com.sumberrejeki.pos.presentation.home
+﻿package com.sumberrejeki.pos.presentation.home
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -37,7 +36,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.sumberrejeki.pos.domain.model.Order
 import com.sumberrejeki.pos.presentation.history.OrderDetailDialog
 
@@ -132,14 +130,21 @@ fun HomeScreen(
             }
         }
 
-        // 1. Sales Metrics
+        // 1. Promotional Auto-Sliding Banner Carousel
+        PromoBannerCarousel(
+            onNavigateToCatalog = onNavigateToCatalog,
+            onNavigateToScanner = onNavigateToScanner,
+            onNavigateToReport = onNavigateToReport
+        )
+
+        // 2. Sales Metrics
         MetricsSection(
             todayRevenue = uiState.todayRevenue,
             todayOrdersCount = uiState.todayOrdersCount,
             totalOrdersCount = uiState.totalOrdersCount
         )
 
-        // 2. Shortcut Grid
+        // 3. Shortcut Grid
         ShortcutGrid(
             userRole = uiState.currentUser?.role,
             onNavigateToCatalog = onNavigateToCatalog,
@@ -148,7 +153,7 @@ fun HomeScreen(
             onNavigateToReport = onNavigateToReport
         )
 
-        // 3. Recent Orders
+        // 4. Recent Orders
         RecentOrdersSection(
             recentOrders = uiState.recentOrders,
             onOrderClick = { selectedOrderForDetail = it },

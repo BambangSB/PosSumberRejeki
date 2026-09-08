@@ -707,6 +707,7 @@ fun ProfileScreen(
     if (showUpgradeModal) {
         UpgradeLicenseModal(
             installationId = uiState.installationId,
+            licensedTo = uiState.licenseInfo.licensedTo.ifBlank { "Toko Sumber Rejeki" },
             licenseKeyInput = uiState.licenseKeyInput,
             isActivating = uiState.isActivatingLicense,
             errorMessage = uiState.errorMessage,
@@ -716,7 +717,21 @@ fun ProfileScreen(
                     showUpgradeModal = false
                 }
             },
-            onGenerateDemoKey = { viewModel.generateDemoLicenseForTesting() },
+            onRequestKeyToCS = {
+                try {
+                    val storeName = uiState.licenseInfo.licensedTo.ifBlank { "Toko Sumber Rejeki" }
+                    val message = "Halo CS Sumber Rejeki,\nSaya ingin request key PREMIUM untuk aplikasi kasir saya.\nBerikut datanya:\n- ID Instalasi: ${uiState.installationId}\n- Nama Toko: $storeName\n\nMohon bantuannya, terima kasih."
+                    val url = "https://wa.me/6283832060902?text=" + Uri.encode(message)
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                    context.startActivity(intent)
+                } catch (e: Exception) {
+                    Toast.makeText(
+                        context,
+                        "Tidak dapat membuka WhatsApp: ${e.message}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            },
             onDismiss = { showUpgradeModal = false }
         )
     }

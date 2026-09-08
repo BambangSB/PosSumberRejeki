@@ -2,7 +2,6 @@ package com.sumberrejeki.pos.domain.usecase.license
 
 import com.sumberrejeki.pos.domain.model.LicenseInfo
 import com.sumberrejeki.pos.domain.repository.LicenseRepository
-import com.sumberrejeki.pos.utils.security.RsaKeyHelper
 import kotlinx.coroutines.flow.Flow
 
 class VerifyRsaLicenseUseCase(
@@ -24,14 +23,4 @@ class GetLicenseStatusUseCase(
     suspend fun getInstallationId(): String = licenseRepository.getInstallationId()
 
     suspend fun deactivateLicense() = licenseRepository.deactivateLicense()
-}
-
-object GenerateLicenseHelper {
-    fun generateOfflineLicenseForDevice(installationId: String, shopName: String = "Sumber Rejeki POS"): String {
-        return RsaKeyHelper.generateLicense(
-            installationId = installationId,
-            licensedTo = shopName,
-            tier = "PREMIUM"
-        )
-    }
 }
