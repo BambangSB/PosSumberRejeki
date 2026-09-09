@@ -220,7 +220,7 @@ class DefaultAppContainer(private val context: Context) : AppContainer {
     }
 
     override val saveProductUseCase: SaveProductUseCase by lazy {
-        SaveProductUseCase(productRepository)
+        SaveProductUseCase(productRepository, licenseRepository)
     }
 
     override val deleteProductUseCase: DeleteProductUseCase by lazy {

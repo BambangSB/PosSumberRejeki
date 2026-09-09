@@ -3,10 +3,12 @@ package com.sumberrejeki.pos.presentation.product
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sumberrejeki.pos.domain.model.CartItem
+import com.sumberrejeki.pos.domain.model.LicenseInfo
 import com.sumberrejeki.pos.domain.model.Product
 import com.sumberrejeki.pos.domain.model.UserRole
 import com.sumberrejeki.pos.domain.usecase.cart.AddToCartDraftUseCase
 import com.sumberrejeki.pos.domain.usecase.cart.GetCartDraftsUseCase
+import com.sumberrejeki.pos.domain.usecase.license.GetLicenseStatusUseCase
 import com.sumberrejeki.pos.domain.usecase.product.DeleteProductUseCase
 import com.sumberrejeki.pos.domain.usecase.product.GetProductByBarcodeUseCase
 import com.sumberrejeki.pos.domain.usecase.product.GetProductsUseCase
@@ -40,8 +42,13 @@ class ProductViewModel(
     private val saveProductUseCase: SaveProductUseCase,
     private val deleteProductUseCase: DeleteProductUseCase,
     private val addToCartDraftUseCase: AddToCartDraftUseCase,
-    getCartDraftsUseCase: GetCartDraftsUseCase
+    getCartDraftsUseCase: GetCartDraftsUseCase,
+    getLicenseStatusUseCase: GetLicenseStatusUseCase? = null
 ) : ViewModel() {
+
+    val licenseInfo: StateFlow<LicenseInfo> = getLicenseStatusUseCase?.licenseInfoFlow
+        ?.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), LicenseInfo())
+        ?: MutableStateFlow(LicenseInfo())
 
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()

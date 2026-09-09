@@ -1,4 +1,4 @@
-﻿package com.sumberrejeki.pos.presentation.home
+package com.sumberrejeki.pos.presentation.home
 
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -63,6 +63,7 @@ fun PromoBannerCarousel(
     onNavigateToCatalog: () -> Unit,
     onNavigateToScanner: () -> Unit,
     onNavigateToReport: () -> Unit,
+    onNavigateToSubscription: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val banners = listOf(
@@ -98,13 +99,13 @@ fun PromoBannerCarousel(
         ),
         PromoBanner(
             id = "license",
-            tag = "LISENSI RSA OFFLINE",
-            title = "Buka Akses Multi-Kasir & Tim",
-            description = "Upgrade lisensi untuk mengelola hingga 3 akun kasir dengan PIN aman tanpa verifikasi server.",
+            tag = "UPGRADE PAKET PRO",
+            title = "Buka Laba Rugi, Ekspor & Multi-Kasir",
+            description = "Kelola ribuan produk tanpa batas, rekap laba otomatis, dan ekspor spreadsheet. Mulai Rp 2.000!",
             icon = Icons.Default.WorkspacePremium,
             gradientColors = listOf(Color(0xFF78350F), Color(0xFFD97706)),
-            actionText = "Cek Laporan",
-            onClick = onNavigateToReport
+            actionText = "Upgrade Pro",
+            onClick = onNavigateToSubscription
         )
     )
 

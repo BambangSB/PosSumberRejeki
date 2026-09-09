@@ -38,6 +38,7 @@ import com.sumberrejeki.pos.presentation.profile.ProfileScreen
 import com.sumberrejeki.pos.presentation.profile.ProfileViewModel
 import com.sumberrejeki.pos.presentation.scan.BarcodeScannerScreen
 import com.sumberrejeki.pos.presentation.scan.ScannerViewModel
+import com.sumberrejeki.pos.presentation.subscription.SubscriptionScreen
 
 @Composable
 fun AppNavigation(
@@ -63,7 +64,8 @@ fun AppNavigation(
             getDashboardMetricsUseCase = container.getDashboardMetricsUseCase,
             getCartDraftsUseCase = container.getCartDraftsUseCase,
             getOrdersHistoryUseCase = container.getOrdersHistoryUseCase,
-            getProductsUseCase = container.getProductsUseCase
+            getProductsUseCase = container.getProductsUseCase,
+            getLicenseStatusUseCase = container.getLicenseStatusUseCase
         )
     }
 
@@ -75,7 +77,8 @@ fun AppNavigation(
             saveProductUseCase = container.saveProductUseCase,
             deleteProductUseCase = container.deleteProductUseCase,
             addToCartDraftUseCase = container.addToCartDraftUseCase,
-            getCartDraftsUseCase = container.getCartDraftsUseCase
+            getCartDraftsUseCase = container.getCartDraftsUseCase,
+            getLicenseStatusUseCase = container.getLicenseStatusUseCase
         )
     }
 
@@ -106,7 +109,8 @@ fun AppNavigation(
             getOrdersHistoryUseCase = container.getOrdersHistoryUseCase,
             getFinancialReportUseCase = container.getFinancialReportUseCase,
             printerManager = container.printerManager,
-            getCurrentSessionUseCase = container.getCurrentSessionUseCase
+            getCurrentSessionUseCase = container.getCurrentSessionUseCase,
+            getLicenseStatusUseCase = container.getLicenseStatusUseCase
         )
     }
 
@@ -164,6 +168,7 @@ fun AppNavigation(
             val showTopBar = currentRoute in listOf(
                 Screen.Home.route,
                 Screen.Catalog.route,
+                Screen.BarcodeScanner.route,
                 Screen.History.route,
                 Screen.Profile.route
             )
@@ -171,6 +176,16 @@ fun AppNavigation(
             if (showTopBar) {
                 PosTopAppBar(
                     title = title,
+                    canNavigateBack = currentRoute != Screen.Home.route,
+                    onNavigateBack = {
+                        if (navController.previousBackStackEntry != null) {
+                            navController.popBackStack()
+                        } else {
+                            navController.navigate(Screen.Home.route) {
+                                popUpTo(Screen.Home.route) { inclusive = true }
+                            }
+                        }
+                    },
                     userRole = currentSession?.role,
                     userName = currentSession?.username,
                     cartItemCount = totalCartItems,
@@ -235,6 +250,7 @@ fun AppNavigation(
                     onNavigateToScanner = { navController.navigate(Screen.BarcodeScanner.route) },
                     onNavigateToHistory = { navController.navigate(Screen.History.route) },
                     onNavigateToReport = { navController.navigate(Screen.FinancialReport.route) },
+                    onNavigateToSubscription = { navController.navigate(Screen.Subscription.route) },
                     showNotificationSheet = showNotificationSheet,
                     onDismissNotificationSheet = { showNotificationSheet = false }
                 )
@@ -249,7 +265,8 @@ fun AppNavigation(
                     },
                     onNavigateToEditProduct = { productId ->
                         navController.navigate(Screen.AddEditProduct.createRoute(productId = productId))
-                    }
+                    },
+                    onNavigateToSubscription = { navController.navigate(Screen.Subscription.route) }
                 )
             }
 
@@ -273,7 +290,8 @@ fun AppNavigation(
                     productId = productId,
                     prefilledBarcode = barcode,
                     userRole = currentSession?.role,
-                    onNavigateBack = { navController.popBackStack() }
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToSubscription = { navController.navigate(Screen.Subscription.route) }
                 )
             }
 
@@ -328,7 +346,8 @@ fun AppNavigation(
                 FinancialReportScreen(
                     viewModel = historyViewModel,
                     userRole = currentSession?.role,
-                    onNavigateBack = { navController.popBackStack() }
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToSubscription = { navController.navigate(Screen.Subscription.route) }
                 )
             }
 
@@ -342,7 +361,8 @@ fun AppNavigation(
                     },
                     onNavigateToEditProduct = { productId ->
                         navController.navigate(Screen.AddEditProduct.createRoute(productId = productId))
-                    }
+                    },
+                    onNavigateToSubscription = { navController.navigate(Screen.Subscription.route) }
                 )
             }
 
@@ -357,7 +377,25 @@ fun AppNavigation(
                     },
                     onNavigateToManageProducts = {
                         navController.navigate(Screen.ManageProducts.route)
+                    },
+                    onNavigateToSubscription = {
+                        navController.navigate(Screen.Subscription.route)
                     }
+                )
+            }
+
+            composable(Screen.Subscription.route) {
+                val profileUiState by profileViewModel.uiState.collectAsState()
+                SubscriptionScreen(
+                    licenseInfo = profileUiState.licenseInfo,
+                    installationId = profileUiState.installationId,
+                    storeName = profileUiState.licenseInfo.licensedTo.ifBlank { "Toko Anda" },
+                    isActivatingKey = profileUiState.isActivatingLicense,
+                    keyErrorMessage = profileUiState.errorMessage,
+                    onActivateKey = { key ->
+                        profileViewModel.activateLicenseKey(key)
+                    },
+                    onNavigateBack = { navController.popBackStack() }
                 )
             }
         }

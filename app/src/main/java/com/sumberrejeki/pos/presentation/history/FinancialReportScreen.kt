@@ -29,11 +29,13 @@ import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.Leaderboard
 import androidx.compose.material.icons.filled.Payments
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.PieChart
 import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.TableChart
 import androidx.compose.material.icons.filled.TrendingUp
+import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -57,6 +59,9 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -76,11 +81,14 @@ import com.sumberrejeki.pos.presentation.theme.SuccessGreen
 fun FinancialReportScreen(
     viewModel: HistoryViewModel,
     userRole: UserRole?,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    onNavigateToSubscription: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
+    val licenseInfo by viewModel.licenseInfo.collectAsState()
     val summary = uiState.financialSummary
+    var showExportProDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -97,7 +105,13 @@ fun FinancialReportScreen(
                 actions = {
                     if (userRole == UserRole.ADMIN && !uiState.isLoadingReport) {
                         IconButton(
-                            onClick = { viewModel.exportFinancialReport(context) }
+                            onClick = {
+                                if (!licenseInfo.canExportData) {
+                                    showExportProDialog = true
+                                } else {
+                                    viewModel.exportFinancialReport(context)
+                                }
+                            }
                         ) {
                             if (uiState.isExportingSpreadsheet) {
                                 CircularProgressIndicator(
@@ -182,7 +196,13 @@ fun FinancialReportScreen(
 
                 // Quick Export Spreadsheet Button
                 OutlinedButton(
-                    onClick = { viewModel.exportFinancialReport(context) },
+                    onClick = {
+                        if (!licenseInfo.canExportData) {
+                            showExportProDialog = true
+                        } else {
+                            viewModel.exportFinancialReport(context)
+                        }
+                    },
                     enabled = !uiState.isExportingSpreadsheet,
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.outlinedButtonColors(
@@ -206,64 +226,132 @@ fun FinancialReportScreen(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Export Laporan ke Spreadsheet (Excel / CSV)",
+                            text = if (licenseInfo.canExportData) "Export Laporan ke Spreadsheet (Excel / CSV)" else "Export Laporan ke Spreadsheet [PRO]",
                             fontWeight = FontWeight.SemiBold
                         )
                     }
                 }
 
                 // 1. Gross Profit Highlight Card
-                Card(
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(modifier = Modifier.padding(20.dp)) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Box(
-                                contentAlignment = Alignment.Center,
-                                modifier = Modifier
-                                    .size(36.dp)
-                                    .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.primary)
+                if (licenseInfo.canViewProfitDetails) {
+                    Card(
+                        shape = RoundedCornerShape(20.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(20.dp)) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.TrendingUp,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onPrimary,
-                                    modifier = Modifier.size(20.dp)
+                                Box(
+                                    contentAlignment = Alignment.Center,
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(CircleShape)
+                                        .background(MaterialTheme.colorScheme.primary)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Filled.TrendingUp,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.onPrimary,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                                Text(
+                                    text = "Estimasi Laba Kotor (Gross Profit)",
+                                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
                                 )
                             }
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
                             Text(
-                                text = "Estimasi Laba Kotor (Gross Profit)",
-                                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                                text = CurrencyFormatter.formatRupiah(summary.grossProfit),
+                                style = MaterialTheme.typography.displayLarge.copy(
+                                    fontWeight = FontWeight.ExtraBold,
+                                    fontSize = 28.sp
+                                ),
                                 color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            val marginPercent = if (summary.totalRevenue > 0) (summary.grossProfit / summary.totalRevenue) * 100 else 0.0
+                            Text(
+                                text = "Margin Keuntungan: ${"%.1f".format(marginPercent)}% dari Total Omset",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                            )
                         }
+                    }
+                } else {
+                    // Locked Card for Free Tier
+                    Card(
+                        shape = RoundedCornerShape(20.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(20.dp)) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Box(
+                                    contentAlignment = Alignment.Center,
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(CircleShape)
+                                        .background(Color(0xFFD97706))
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Lock,
+                                        contentDescription = null,
+                                        tint = Color.White,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                                Text(
+                                    text = "Estimasi Laba Kotor — [FITUR PRO]",
+                                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
 
-                        Spacer(modifier = Modifier.height(12.dp))
+                            Spacer(modifier = Modifier.height(10.dp))
 
-                        Text(
-                            text = CurrencyFormatter.formatRupiah(summary.grossProfit),
-                            style = MaterialTheme.typography.displayLarge.copy(
-                                fontWeight = FontWeight.ExtraBold,
-                                fontSize = 28.sp
-                            ),
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
+                            Text(
+                                text = "Rp •••••••• (Terkunci)",
+                                style = MaterialTheme.typography.displayLarge.copy(
+                                    fontWeight = FontWeight.ExtraBold,
+                                    fontSize = 24.sp
+                                ),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                            )
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(modifier = Modifier.height(6.dp))
 
-                        val marginPercent = if (summary.totalRevenue > 0) (summary.grossProfit / summary.totalRevenue) * 100 else 0.0
-                        Text(
-                            text = "Margin Keuntungan: ${"%.1f".format(marginPercent)}% dari Total Omset",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
-                        )
+                            Text(
+                                text = "Upgrade ke Pro mulai Rp 2.000 untuk melihat detail laba kotor, margin keuntungan, dan analisis HPP modal toko Anda.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            Button(
+                                onClick = onNavigateToSubscription,
+                                shape = RoundedCornerShape(10.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD97706))
+                            ) {
+                                Icon(Icons.Default.WorkspacePremium, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Buka Detail Laba & HPP", fontWeight = FontWeight.Bold)
+                            }
+                        }
                     }
                 }
 
@@ -282,7 +370,7 @@ fun FinancialReportScreen(
 
                     ReportMetricCard(
                         title = "Total Modal Produk (HPP)",
-                        value = CurrencyFormatter.formatRupiah(summary.totalCostOfGoods),
+                        value = if (licenseInfo.canViewProfitDetails) CurrencyFormatter.formatRupiah(summary.totalCostOfGoods) else "•••••• [PRO]",
                         icon = Icons.Default.PieChart,
                         color = Color(0xFFD32F2F),
                         modifier = Modifier.weight(1f)
@@ -518,6 +606,33 @@ fun FinancialReportScreen(
                     }
                 ) {
                     Text("Salin Lokasi")
+                }
+            }
+        )
+    }
+
+    if (showExportProDialog) {
+        AlertDialog(
+            onDismissRequest = { showExportProDialog = false },
+            icon = { Icon(Icons.Default.Lock, contentDescription = null, tint = Color(0xFFD97706)) },
+            title = { Text("Fitur Pro: Ekspor Spreadsheet", fontWeight = FontWeight.Bold) },
+            text = {
+                Text("Fitur ekspor laporan transaksi ke format Excel / CSV hanya tersedia pada paket Pro. Upgrade sekarang mulai dari Rp 2.000/hari!")
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showExportProDialog = false
+                        onNavigateToSubscription()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD97706))
+                ) {
+                    Text("Upgrade ke Pro", fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showExportProDialog = false }) {
+                    Text("Nanti Saja")
                 }
             }
         )

@@ -36,6 +36,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.HeadsetMic
 import androidx.compose.material.icons.filled.Inventory2
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Restore
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Shield
@@ -85,6 +86,7 @@ fun ProfileScreen(
     viewModel: ProfileViewModel,
     onLogoutSuccess: () -> Unit,
     onNavigateToManageProducts: () -> Unit = {},
+    onNavigateToSubscription: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -98,6 +100,7 @@ fun ProfileScreen(
     var showEditStoreDialog by remember { mutableStateOf(false) }
     var inputStoreName by remember { mutableStateOf("") }
     var showConfirmStoreNameDialog by remember { mutableStateOf(false) }
+    var showUpgradeRequiredForStoreNameDialog by remember { mutableStateOf(false) }
 
     // Dialog state for Edit Admin Name
     var showEditAdminDialog by remember { mutableStateOf(false) }
@@ -222,10 +225,11 @@ fun ProfileScreen(
             }
 
             // 2. Store Info & License Status Card
+            val isPro = uiState.licenseInfo.isProActive
             Card(
                 shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = if (uiState.licenseInfo.isPremium) MaterialTheme.colorScheme.primaryContainer
+                    containerColor = if (isPro) MaterialTheme.colorScheme.primaryContainer
                     else MaterialTheme.colorScheme.surface
                 ),
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
@@ -242,29 +246,33 @@ fun ProfileScreen(
                             Icon(
                                 imageVector = Icons.Default.Store,
                                 contentDescription = null,
-                                tint = if (uiState.licenseInfo.isPremium) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.primary,
+                                tint = if (isPro) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(22.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = uiState.licenseInfo.licensedTo.ifBlank { "Toko Sumber Rejeki" },
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                color = if (uiState.licenseInfo.isPremium) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+                                color = if (isPro) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
                             )
                         }
 
                         if (currentUser?.role == UserRole.ADMIN) {
                             IconButton(
                                 onClick = {
-                                    inputStoreName = uiState.licenseInfo.licensedTo.ifBlank { "Sumber Rejeki POS" }
-                                    showEditStoreDialog = true
+                                    if (!uiState.licenseInfo.canEditStoreName) {
+                                        showUpgradeRequiredForStoreNameDialog = true
+                                    } else {
+                                        inputStoreName = uiState.licenseInfo.licensedTo.ifBlank { "Sumber Rejeki POS" }
+                                        showEditStoreDialog = true
+                                    }
                                 },
                                 modifier = Modifier.size(32.dp)
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Edit,
                                     contentDescription = "Ubah Nama Toko",
-                                    tint = if (uiState.licenseInfo.isPremium) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.primary,
+                                    tint = if (isPro) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.size(18.dp)
                                 )
                             }
@@ -272,7 +280,7 @@ fun ProfileScreen(
                     }
 
                     HorizontalDivider(
-                        color = (if (uiState.licenseInfo.isPremium) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.outlineVariant).copy(
+                        color = (if (isPro) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.outlineVariant).copy(
                             alpha = 0.2f
                         ),
                         modifier = Modifier.padding(vertical = 8.dp)
@@ -286,42 +294,48 @@ fun ProfileScreen(
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
-                                imageVector = if (uiState.licenseInfo.isPremium) Icons.Default.Star else Icons.Default.Shield,
+                                imageVector = if (isPro) Icons.Default.Star else Icons.Default.Shield,
                                 contentDescription = null,
-                                tint = if (uiState.licenseInfo.isPremium) PremiumGold else MaterialTheme.colorScheme.primary,
+                                tint = if (isPro) PremiumGold else MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(20.dp)
                             )
                             Spacer(modifier = Modifier.width(6.dp))
+                            val tierTitle = when {
+                                uiState.licenseInfo.isTrialActive -> "Lisensi: PRO (Trial - ${uiState.licenseInfo.trialDaysRemaining} hari)"
+                                uiState.licenseInfo.isProActive -> "Lisensi: PRO (Aktif)"
+                                else -> "Lisensi: GRATIS (Terbatas)"
+                            }
                             Text(
-                                text = if (uiState.licenseInfo.isPremium) "Lisensi: PREMIUM (Aktif)" else "Lisensi: GRATIS (1 Pengguna)",
+                                text = tierTitle,
                                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                                color = if (uiState.licenseInfo.isPremium) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+                                color = if (isPro) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
                             )
                         }
 
-                        if (!uiState.licenseInfo.isPremium) {
-                            Button(
-                                onClick = { showUpgradeModal = true },
-                                shape = RoundedCornerShape(10.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                                contentPadding = ButtonDefaults.ContentPadding
-                            ) {
-                                Text(
-                                    "Upgrade",
-                                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold)
-                                )
-                            }
+                        Button(
+                            onClick = onNavigateToSubscription,
+                            shape = RoundedCornerShape(10.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                            contentPadding = ButtonDefaults.ContentPadding
+                        ) {
+                            Text(
+                                text = if (isPro) "Paket Pro" else "Upgrade",
+                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold)
+                            )
                         }
                     }
 
                     Spacer(modifier = Modifier.height(6.dp))
 
+                    val descText = when {
+                        uiState.licenseInfo.isTrialActive -> "Semua fitur Pro aktif selama masa percobaan 3 hari. Nikmati akses tanpa batas!"
+                        uiState.licenseInfo.isProActive -> "Fitur Pro Aktif: Akses rincian laba rugi, ekspor spreadsheet, tanpa batas produk, dan multi-kasir."
+                        else -> "Versi Gratis: Terbatas 30 produk, 1 admin, tanpa rincian laba rugi & ekspor. Upgrade ke Pro mulai Rp 2.000/hari."
+                    }
                     Text(
-                        text = if (uiState.licenseInfo.isPremium)
-                            "Fitur Premium Aktif: Hingga 3 Pengguna (1 Admin + 2 Kasir) dan lisensi offline permanen."
-                        else "Versi Gratis terbatas untuk 1 pengguna (Admin). Upgrade untuk mengaktifkan staf kasir tambahan.",
+                        text = descText,
                         style = MaterialTheme.typography.bodySmall,
-                        color = if (uiState.licenseInfo.isPremium) MaterialTheme.colorScheme.onPrimaryContainer.copy(
+                        color = if (isPro) MaterialTheme.colorScheme.onPrimaryContainer.copy(
                             alpha = 0.8f
                         ) else MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -402,7 +416,7 @@ fun ProfileScreen(
                     onDeleteStaff = { user ->
                         viewModel.deleteStaffUser(user)
                     },
-                    onUpgradeLicenseClick = { showUpgradeModal = true }
+                    onUpgradeLicenseClick = onNavigateToSubscription
                 )
             }
 
@@ -961,6 +975,33 @@ fun ProfileScreen(
             dismissButton = {
                 TextButton(onClick = { viewModel.dismissRestorePreview() }) {
                     Text("Batal")
+                }
+            }
+        )
+    }
+
+    if (showUpgradeRequiredForStoreNameDialog) {
+        AlertDialog(
+            onDismissRequest = { showUpgradeRequiredForStoreNameDialog = false },
+            icon = { Icon(Icons.Default.Lock, contentDescription = null, tint = Color(0xFFD97706)) },
+            title = { Text("Ubah Nama Toko Terkunci", fontWeight = FontWeight.Bold) },
+            text = {
+                Text("Fitur kustomisasi nama toko pada struk belanja dan nota hanya tersedia untuk pelanggan paket Pro. Upgrade sekarang mulai dari Rp 2.000/hari!")
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showUpgradeRequiredForStoreNameDialog = false
+                        onNavigateToSubscription()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD97706))
+                ) {
+                    Text("Upgrade ke Pro", fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showUpgradeRequiredForStoreNameDialog = false }) {
+                    Text("Nanti Saja")
                 }
             }
         )

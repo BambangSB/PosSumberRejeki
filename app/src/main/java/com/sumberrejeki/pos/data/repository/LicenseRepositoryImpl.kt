@@ -34,14 +34,16 @@ class LicenseRepositoryImpl(
         )
 
         return verifyResult.mapCatching { payload ->
-            val isPremium = payload.tier.equals("PREMIUM", ignoreCase = true)
+            val isPremium = payload.tier.equals("PREMIUM", ignoreCase = true) ||
+                    payload.tier.equals("PRO", ignoreCase = true)
             val activationDate = System.currentTimeMillis()
 
             licensePreferences.saveLicense(
                 isPremium = isPremium,
                 licenseKey = licenseKeyString.trim(),
                 licensedTo = payload.licensedTo,
-                activationDate = activationDate
+                activationDate = activationDate,
+                expiresAt = payload.expiresAt
             )
 
             LicenseInfo(
@@ -50,7 +52,7 @@ class LicenseRepositoryImpl(
                 licensedTo = payload.licensedTo,
                 licenseKey = licenseKeyString.trim(),
                 activationDate = activationDate,
-                maxUsers = if (isPremium) 3 else 1
+                expiresAt = payload.expiresAt
             )
         }
     }

@@ -16,6 +16,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -40,14 +41,18 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FlashOff
 import androidx.compose.material.icons.filled.FlashOn
 import androidx.compose.material.icons.filled.Inventory
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Money
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.ShoppingBag
+import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -101,9 +106,12 @@ fun AddEditProductScreen(
     productId: Long,
     prefilledBarcode: String?,
     userRole: UserRole?,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    onNavigateToSubscription: () -> Unit = {}
 ) {
     val isEditMode = productId > 0
+    val licenseInfo by viewModel.licenseInfo.collectAsState()
+    val isEditBlocked = isEditMode && !licenseInfo.canEditProductDetails
 
     var barcode by remember { mutableStateOf(prefilledBarcode ?: "") }
     var name by remember { mutableStateOf("") }
@@ -210,6 +218,50 @@ fun AddEditProductScreen(
                     .padding(20.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+                // Locked Notice if editing on Free Tier
+                if (isEditBlocked) {
+                    Card(
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF3E0)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(14.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Lock,
+                                contentDescription = null,
+                                tint = Color(0xFFE65100),
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Fitur Edit Produk Terkunci",
+                                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                                    color = Color(0xFFE65100)
+                                )
+                                Text(
+                                    text = "Versi Gratis tidak dapat mengubah detail produk yang sudah tersimpan. Upgrade ke paket Pro untuk membuka akses edit.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Color(0xFF5D4037)
+                                )
+                            }
+                            Button(
+                                onClick = onNavigateToSubscription,
+                                shape = RoundedCornerShape(8.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE65100)),
+                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp)
+                            ) {
+                                Text("Upgrade", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold))
+                            }
+                        }
+                    }
+                }
+
                 // Barcode / SKU Input with Scan Action
                 OutlinedTextField(
                     value = barcode,
@@ -398,48 +450,66 @@ fun AddEditProductScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // Save Button
-                Button(
-                    onClick = {
-                        val sPrice = sellPriceStr.toDoubleOrNull() ?: 0.0
-                        val cPrice = costPriceStr.toDoubleOrNull() ?: 0.0
-                        val stock = stockStr.toIntOrNull() ?: 0
+                if (isEditBlocked) {
+                    Button(
+                        onClick = onNavigateToSubscription,
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE65100)),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp)
+                    ) {
+                        Icon(Icons.Default.WorkspacePremium, contentDescription = null, modifier = Modifier.size(20.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Upgrade ke Pro untuk Mengubah Produk",
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                        )
+                    }
+                } else {
+                    Button(
+                        onClick = {
+                            val sPrice = sellPriceStr.toDoubleOrNull() ?: 0.0
+                            val cPrice = costPriceStr.toDoubleOrNull() ?: 0.0
+                            val stock = stockStr.toIntOrNull() ?: 0
 
-                        if (barcode.isBlank()) {
-                            errorMessage = "Barcode tidak boleh kosong"
-                        } else if (name.isBlank()) {
-                            errorMessage = "Nama produk tidak boleh kosong"
-                        } else if (sPrice <= 0) {
-                            errorMessage = "Harga jual harus lebih dari 0"
-                        } else if (userRole == null) {
-                            errorMessage = "Sesi tidak valid"
-                        } else {
-                            val product = Product(
-                                productId = if (isEditMode) productId else 0L,
-                                barcode = barcode.trim(),
-                                name = name.trim(),
-                                category = category.trim(),
-                                sellPrice = sPrice,
-                                costPrice = cPrice,
-                                stock = stock
-                            )
-                            viewModel.saveProduct(product, userRole) { result ->
-                                result.onSuccess {
-                                    onNavigateBack()
-                                }.onFailure { error ->
-                                    errorMessage = error.message ?: "Gagal menyimpan produk"
+                            if (barcode.isBlank()) {
+                                errorMessage = "Barcode tidak boleh kosong"
+                            } else if (name.isBlank()) {
+                                errorMessage = "Nama produk tidak boleh kosong"
+                            } else if (sPrice <= 0) {
+                                errorMessage = "Harga jual harus lebih dari 0"
+                            } else if (userRole == null) {
+                                errorMessage = "Sesi tidak valid"
+                            } else {
+                                val product = Product(
+                                    productId = if (isEditMode) productId else 0L,
+                                    barcode = barcode.trim(),
+                                    name = name.trim(),
+                                    category = category.trim(),
+                                    sellPrice = sPrice,
+                                    costPrice = cPrice,
+                                    stock = stock
+                                )
+                                viewModel.saveProduct(product, userRole) { result ->
+                                    result.onSuccess {
+                                        onNavigateBack()
+                                    }.onFailure { error ->
+                                        errorMessage = error.message ?: "Gagal menyimpan produk"
+                                    }
                                 }
                             }
-                        }
-                    },
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp)
-                ) {
-                    Text(
-                        text = if (isEditMode) "Simpan Perubahan" else "Tambah Produk",
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-                    )
+                        },
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp)
+                    ) {
+                        Text(
+                            text = if (isEditMode) "Simpan Perubahan" else "Tambah Produk",
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(40.dp))

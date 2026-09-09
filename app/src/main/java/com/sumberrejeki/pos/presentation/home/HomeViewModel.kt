@@ -52,7 +52,8 @@ data class HomeUiState(
     val cartItemCount: Int = 0,
     val cartTotalPrice: Double = 0.0,
     val recentOrders: List<Order> = emptyList(),
-    val notifications: List<HomeNotification> = emptyList()
+    val notifications: List<HomeNotification> = emptyList(),
+    val licenseInfo: com.sumberrejeki.pos.domain.model.LicenseInfo = com.sumberrejeki.pos.domain.model.LicenseInfo()
 )
 
 class HomeViewModel(
@@ -60,7 +61,8 @@ class HomeViewModel(
     getDashboardMetricsUseCase: GetDashboardMetricsUseCase,
     getCartDraftsUseCase: GetCartDraftsUseCase,
     getOrdersHistoryUseCase: GetOrdersHistoryUseCase,
-    getProductsUseCase: GetProductsUseCase
+    getProductsUseCase: GetProductsUseCase,
+    getLicenseStatusUseCase: com.sumberrejeki.pos.domain.usecase.license.GetLicenseStatusUseCase? = null
 ) : ViewModel() {
 
     private val metricsFlow: Flow<HomeMetrics> = combine(
@@ -78,13 +80,19 @@ class HomeViewModel(
         CartSummary(itemCount, totalPrice)
     }
 
+    private val licenseFlow = getLicenseStatusUseCase?.licenseInfoFlow
+        ?: kotlinx.coroutines.flow.flowOf(com.sumberrejeki.pos.domain.model.LicenseInfo())
+
     val uiState: StateFlow<HomeUiState> = combine(
-        getCurrentSessionUseCase(),
-        metricsFlow,
-        cartSummaryFlow,
+        combine(
+            getCurrentSessionUseCase(),
+            metricsFlow,
+            cartSummaryFlow
+        ) { user, metrics, cart -> Triple(user, metrics, cart) },
         getOrdersHistoryUseCase.allOrdersFlow,
-        getProductsUseCase.allProductsFlow
-    ) { user, metrics, cart, orders, products ->
+        getProductsUseCase.allProductsFlow,
+        licenseFlow
+    ) { (user, metrics, cart), orders, products, license ->
         val notifs = buildNotifications(products, metrics, orders)
         HomeUiState(
             currentUser = user,
@@ -94,7 +102,8 @@ class HomeViewModel(
             cartItemCount = cart.totalItemCount,
             cartTotalPrice = cart.totalCartPrice,
             recentOrders = orders.take(5),
-            notifications = notifs
+            notifications = notifs,
+            licenseInfo = license
         )
     }.stateIn(
         scope = viewModelScope,

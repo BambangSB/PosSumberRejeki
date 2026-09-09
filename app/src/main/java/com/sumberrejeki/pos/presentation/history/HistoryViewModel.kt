@@ -24,6 +24,9 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.Calendar
 
+import com.sumberrejeki.pos.domain.model.LicenseInfo
+import com.sumberrejeki.pos.domain.usecase.license.GetLicenseStatusUseCase
+
 enum class ReportPeriod {
     TODAY,
     THIS_MONTH,
@@ -46,8 +49,13 @@ class HistoryViewModel(
     private val getOrdersHistoryUseCase: GetOrdersHistoryUseCase,
     private val getFinancialReportUseCase: GetFinancialReportUseCase,
     private val printerManager: BluetoothPrinterManager,
-    getCurrentSessionUseCase: GetCurrentSessionUseCase
+    getCurrentSessionUseCase: GetCurrentSessionUseCase,
+    getLicenseStatusUseCase: GetLicenseStatusUseCase? = null
 ) : ViewModel() {
+
+    val licenseInfo: StateFlow<LicenseInfo> = getLicenseStatusUseCase?.licenseInfoFlow
+        ?.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), LicenseInfo())
+        ?: MutableStateFlow(LicenseInfo())
 
     val currentUser = getCurrentSessionUseCase()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
@@ -124,6 +132,12 @@ class HistoryViewModel(
     }
 
     fun exportFinancialReport(context: Context, storeName: String = "Sumber Rejeki POS") {
+        if (!licenseInfo.value.canExportData) {
+            _uiState.value = _uiState.value.copy(
+                reportErrorMessage = "Fitur Ekspor Spreadsheet terkunci. Silakan upgrade ke Pro untuk mengekspor data."
+            )
+            return
+        }
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isExportingSpreadsheet = true)
             try {

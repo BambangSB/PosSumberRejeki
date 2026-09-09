@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.WarningAmber
 import androidx.compose.material3.AlertDialog
@@ -60,6 +61,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -76,15 +78,19 @@ fun ManageProductsScreen(
     onNavigateBack: () -> Unit,
     onNavigateToAddProduct: () -> Unit,
     onNavigateToEditProduct: (Long) -> Unit,
+    onNavigateToSubscription: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val products by viewModel.products.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
     val snackbarMessage by viewModel.snackbarMessage.collectAsState()
+    val licenseInfo by viewModel.licenseInfo.collectAsState()
 
     var selectedIds by remember { mutableStateOf(setOf<Long>()) }
     var singleProductToDelete by remember { mutableStateOf<Product?>(null) }
     var showBatchDeleteConfirmDialog by remember { mutableStateOf(false) }
+    var showProductLimitDialog by remember { mutableStateOf(false) }
+    var showEditBlockedDialog by remember { mutableStateOf(false) }
 
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -134,7 +140,13 @@ fun ManageProductsScreen(
         floatingActionButton = {
             if (userRole == UserRole.ADMIN) {
                 FloatingActionButton(
-                    onClick = onNavigateToAddProduct,
+                    onClick = {
+                        if (!licenseInfo.canAddProduct(products.size)) {
+                            showProductLimitDialog = true
+                        } else {
+                            onNavigateToAddProduct()
+                        }
+                    },
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary,
                     shape = RoundedCornerShape(16.dp),
@@ -302,7 +314,13 @@ fun ManageProductsScreen(
                                     selectedIds + product.productId
                                 }
                             },
-                            onEdit = { onNavigateToEditProduct(product.productId) },
+                            onEdit = {
+                                if (!licenseInfo.canEditProductDetails) {
+                                    showEditBlockedDialog = true
+                                } else {
+                                    onNavigateToEditProduct(product.productId)
+                                }
+                            },
                             onDelete = { singleProductToDelete = product }
                         )
                     }
@@ -434,6 +452,62 @@ fun ManageProductsScreen(
             dismissButton = {
                 TextButton(onClick = { showBatchDeleteConfirmDialog = false }) {
                     Text("Batal")
+                }
+            }
+        )
+    }
+
+    // 30 Product Limit Dialog
+    if (showProductLimitDialog) {
+        AlertDialog(
+            onDismissRequest = { showProductLimitDialog = false },
+            icon = { Icon(Icons.Default.Lock, contentDescription = null, tint = Color(0xFFD97706)) },
+            title = { Text("Batas 30 Produk Tercapai", fontWeight = FontWeight.Bold) },
+            text = {
+                Text("Akun versi Gratis dibatasi maksimal 30 produk. Upgrade ke paket Pro untuk menambah produk tanpa batasan dan kelola ribuan stok toko Anda!")
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showProductLimitDialog = false
+                        onNavigateToSubscription()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD97706))
+                ) {
+                    Text("Upgrade ke Pro", fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showProductLimitDialog = false }) {
+                    Text("Nanti Saja")
+                }
+            }
+        )
+    }
+
+    // Edit Product Blocked Dialog
+    if (showEditBlockedDialog) {
+        AlertDialog(
+            onDismissRequest = { showEditBlockedDialog = false },
+            icon = { Icon(Icons.Default.Lock, contentDescription = null, tint = Color(0xFFD97706)) },
+            title = { Text("Edit Produk Terkunci", fontWeight = FontWeight.Bold) },
+            text = {
+                Text("Fitur mengedit detail produk yang sudah tersimpan hanya tersedia untuk pengguna paket Pro. Upgrade sekarang mulai dari Rp 2.000/hari!")
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showEditBlockedDialog = false
+                        onNavigateToSubscription()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD97706))
+                ) {
+                    Text("Upgrade ke Pro", fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showEditBlockedDialog = false }) {
+                    Text("Nanti Saja")
                 }
             }
         )

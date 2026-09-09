@@ -3,7 +3,9 @@ package com.sumberrejeki.pos.domain.usecase.product
 import com.sumberrejeki.pos.domain.model.Product
 import com.sumberrejeki.pos.domain.model.UserRole
 import com.sumberrejeki.pos.domain.repository.ProductRepository
+import com.sumberrejeki.pos.domain.repository.LicenseRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 
 class GetProductsUseCase(
     private val productRepository: ProductRepository
@@ -29,14 +31,29 @@ class GetProductByBarcodeUseCase(
         return productRepository.getProductByBarcode(barcode.trim())
     }
 }
-
 class SaveProductUseCase(
-    private val productRepository: ProductRepository
+    private val productRepository: ProductRepository,
+    private val licenseRepository: LicenseRepository
 ) {
     suspend operator fun invoke(product: Product, userRole: UserRole): Result<Long> {
         // RBAC: Check Admin role for creating/updating products
         if (userRole != UserRole.ADMIN) {
             return Result.failure(SecurityException("Hanya Admin yang berwenang menambah atau mengubah produk"))
+        }
+
+        val licenseInfo = licenseRepository.licenseInfoFlow.first()
+
+        // Limitation 1: Edit product detail is restricted on Free Tier
+        if (product.productId != 0L && !licenseInfo.canEditProductDetails) {
+            return Result.failure(IllegalStateException("Mengedit detail produk hanya tersedia untuk akun Pro. Silakan upgrade ke Pro!"))
+        }
+
+        // Limitation 2: Max 30 products on Free Tier
+        if (product.productId == 0L && !licenseInfo.isProActive) {
+            val currentProducts = productRepository.allProductsFlow.first()
+            if (currentProducts.size >= 30) {
+                return Result.failure(IllegalStateException("Batas 30 produk tercapai pada paket Gratis. Silakan upgrade ke Pro untuk menambah produk tanpa batas!"))
+            }
         }
 
         if (product.name.isBlank()) {

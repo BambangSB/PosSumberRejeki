@@ -99,7 +99,10 @@ class ProfileViewModel(
     }
 
     fun activateLicense(onSuccess: () -> Unit) {
-        val key = _uiState.value.licenseKeyInput
+        activateLicenseKey(_uiState.value.licenseKeyInput, onSuccess)
+    }
+
+    fun activateLicenseKey(key: String, onSuccess: () -> Unit = {}) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isActivatingLicense = true, errorMessage = null)
             val result = verifyRsaLicenseUseCase(key)
@@ -107,7 +110,7 @@ class ProfileViewModel(
                 _uiState.value = _uiState.value.copy(
                     isActivatingLicense = false,
                     licenseInfo = info,
-                    message = "Selamat! Lisensi Premium Berhasil Diaktifkan!"
+                    message = "Selamat! Lisensi Pro Berhasil Diaktifkan!"
                 )
                 onSuccess()
             }.onFailure { error ->

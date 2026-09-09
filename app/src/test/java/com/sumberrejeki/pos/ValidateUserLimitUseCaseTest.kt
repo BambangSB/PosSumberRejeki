@@ -32,13 +32,12 @@ class ValidateUserLimitUseCaseTest {
     private class FakeLicenseRepository(private val isPremium: Boolean) : LicenseRepository {
         override val licenseInfoFlow: Flow<LicenseInfo> = flowOf(
             LicenseInfo(
-                isPremium = isPremium,
-                maxUsers = if (isPremium) 3 else 1
+                isPremium = isPremium
             )
         )
         override suspend fun getInstallationId(): String = "FAKE-ID"
         override suspend fun verifyAndActivateLicense(licenseKeyString: String): Result<LicenseInfo> =
-            Result.success(LicenseInfo(isPremium = true, maxUsers = 3))
+            Result.success(LicenseInfo(isPremium = true))
         override suspend fun deactivateLicense() {}
         override suspend fun updateStoreName(newStoreName: String) {}
     }

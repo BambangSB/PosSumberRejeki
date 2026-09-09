@@ -1,4 +1,4 @@
-﻿package com.sumberrejeki.pos.presentation.home
+package com.sumberrejeki.pos.presentation.home
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -18,7 +18,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.WarningAmber
+import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -46,6 +48,7 @@ fun HomeScreen(
     onNavigateToScanner: () -> Unit,
     onNavigateToHistory: () -> Unit,
     onNavigateToReport: () -> Unit,
+    onNavigateToSubscription: () -> Unit = {},
     showNotificationSheet: Boolean = false,
     onDismissNotificationSheet: () -> Unit = {},
     modifier: Modifier = Modifier
@@ -130,11 +133,88 @@ fun HomeScreen(
             }
         }
 
+        // Subscription / Trial Status Banner (BisaKasir pattern)
+        val licenseInfo = uiState.licenseInfo
+        val bannerBg = when {
+            licenseInfo.isTrialActive -> Color(0xFFE8F5E9)
+            !licenseInfo.isProActive -> Color(0xFFFFF3E0)
+            else -> Color(0xFFFFF8E1)
+        }
+        val bannerIconColor = when {
+            licenseInfo.isTrialActive -> Color(0xFF2E7D32)
+            !licenseInfo.isProActive -> Color(0xFFE65100)
+            else -> Color(0xFFD97706)
+        }
+        val bannerTitle = when {
+            licenseInfo.isTrialActive -> "Hemat 2 jam rekap manual tiap hari"
+            !licenseInfo.isProActive -> "Masa Percobaan Pro Selesai"
+            else -> "Paket Pro Aktif"
+        }
+        val bannerDesc = when {
+            licenseInfo.isTrialActive -> "Semua fitur Pro aktif ${licenseInfo.trialDaysRemaining} hari (Trial). Nikmati selagi trial."
+            !licenseInfo.isProActive -> "Upgrade Pro mulai Rp 2.000/hari untuk membuka detail laba rugi & ekspor spreadsheet."
+            else -> "Semua fitur bisnis Sumber Rejeki POS terbuka tanpa batas. Kelola langganan di sini."
+        }
+
+        Card(
+            shape = RoundedCornerShape(14.dp),
+            colors = CardDefaults.cardColors(containerColor = bannerBg),
+            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onNavigateToSubscription() }
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 14.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(bannerIconColor.copy(alpha = 0.15f))
+                ) {
+                    Icon(
+                        imageVector = if (licenseInfo.isProActive) Icons.Default.WorkspacePremium else Icons.Default.Lock,
+                        contentDescription = null,
+                        tint = bannerIconColor,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = bannerTitle,
+                        style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+                        color = Color(0xFF1E293B)
+                    )
+                    Text(
+                        text = bannerDesc,
+                        style = MaterialTheme.typography.bodySmall,
+                        maxLines = 2,
+                        color = Color(0xFF475569)
+                    )
+                }
+
+                Icon(
+                    imageVector = Icons.Default.ChevronRight,
+                    contentDescription = "Buka Langganan",
+                    tint = bannerIconColor,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
+
         // 1. Promotional Auto-Sliding Banner Carousel
         PromoBannerCarousel(
             onNavigateToCatalog = onNavigateToCatalog,
             onNavigateToScanner = onNavigateToScanner,
-            onNavigateToReport = onNavigateToReport
+            onNavigateToReport = onNavigateToReport,
+            onNavigateToSubscription = onNavigateToSubscription
         )
 
         // 2. Sales Metrics
