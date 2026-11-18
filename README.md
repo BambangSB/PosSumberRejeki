@@ -186,4 +186,6 @@ Kontribusi, *pull request*, dan saran perbaikan fitur sangat dipersilakan! Silak
 ---
 
 ## 📄 Lisensi
-Hak Cipta © 2026 **Sumber Rejeki POS**. Seluruh hak cipta dilindungi.
+Hak Cipta © 2026 **Bambang Setyabudi** untuk Sumber Rejeki POS.
+
+Proyek ini dilisensikan di bawah **Apache License 2.0**. Lihat file [LICENSE](LICENSE) untuk teks lengkap lisensi.
